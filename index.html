@@ -252,6 +252,8 @@
     let waitingForSecondOperand = false;
     let numberHistory = []; 
     let currentOperationString = '';
+    // NOTE: Keep your active script URL here. 
+    // If you redeploy, remember to update this URL.
     const googleScriptUrl = 'https://script.google.com/macros/s/AKfycbwIZ2JB6AU4aCAakji4ME4z1G8MaVQFhCtIWS1w0ibd4u_Hdoi__HXU9B3Nj4H_k_A/exec';
 
 
@@ -340,7 +342,6 @@
         
         if (firstOperand === null) {
             firstOperand = inputValue;
-            // numberHistory.push(inputValue); // Pushing logic moved to calculate() or a new function
             currentOperationString = displayValue + ' +';
         } else if (operator === '+') {
             // New logic: Only push the number if it's not the result from a previous step
@@ -370,6 +371,9 @@
         const inputValue = parseFloat(displayValue);
         let calculationPerformed = false;
         
+        // ** FIX: Capture the value that was just typed/displayed before calculating the result **
+        const finalInputString = displayValue;
+
         // --- 1. Handle Single-Number Entry (e.g., 5, then =) ---
         if (firstOperand === null && operator === null) {
             numberHistory.push(inputValue);
@@ -377,7 +381,7 @@
             calculationPerformed = true;
         } 
         
-        // --- 2. Handle Pending Addition (e.g., 5 + 3, then = or 5 +, then = ) ---
+        // --- 2. Handle Pending Addition/Operation (e.g., 5 + 3, then = or 5 +, then = ) ---
         else if (operator !== null && !waitingForSecondOperand) {
             
             // Add the final number to the history if an operation was pending
@@ -389,15 +393,15 @@
                 firstOperand = result;
             }
             
-            currentOperationString += ' ' + displayValue + ' =';
+            // FIX APPLIED HERE: Use the captured finalInputString
+            currentOperationString += ' ' + finalInputString + ' =';
             calculationPerformed = true;
 
         } else if (operator === '+' && waitingForSecondOperand) {
              // Handle case: 5 + = (Pressing = immediately after '+')
-             // Use the first operand as the input value for the history
-             // This fulfills the '5 + =' scenario by pushing '5' to history
              if(numberHistory.length === 0 && firstOperand !== null) {
                  numberHistory.push(firstOperand);
+                 // We don't change displayValue here, just finalize the string
              }
              currentOperationString += ' =';
              calculationPerformed = true;
@@ -409,7 +413,6 @@
         }
         
         // --- Reset State ---
-        // Clear history for the next calculation sequence
         if (calculationPerformed) {
             numberHistory = []; 
             waitingForSecondOperand = true;
@@ -421,29 +424,28 @@
 
 
     // --- Google Script Integration ---
-
     async function sendDataToGoogleScript(numbers) {
         // Format: zero-padded (min 2 digits) and double-space separated
         const formattedValue = numbers
             .map(n => {
-                // Ensure n is a number and not null/undefined/NaN
                 if (typeof n !== 'number' || isNaN(n)) {
-                    return ''; // Skip non-numbers
+                    return ''; 
                 }
                 const absN = Math.abs(n);
-                // Use fixed(0) to remove decimals for padding
-                const paddedAbs = String(Math.floor(absN)).padStart(2, '0');
+                // Use Math.floor to ensure non-decimal padding
+                const paddedAbs = String(Math.floor(absN)).padStart(2, '0'); 
                 return n < 0 ? '-' + paddedAbs : paddedAbs;
             })
-            .filter(s => s.length > 0) // Remove empty strings from non-numbers
+            .filter(s => s.length > 0)
             .join('  ');
             
-        // Don't send if the history only contained non-numeric values
         if (formattedValue.length === 0) {
             console.log('No valid numbers to send.');
             return;
         }
 
+        // FIX FOR URL: Ensure the URL structure is correct for the GET request
+        // The formattedValue is URI-encoded to handle the double spaces.
         const fullUrl = `${googleScriptUrl}?value=${encodeURIComponent(formattedValue)}`;
 
         try {
@@ -454,6 +456,7 @@
             while (attempts < maxAttempts) {
                 attempts++;
                 
+                // IMPORTANT: Use GET method as required by Google Apps Script doGet(e)
                 response = await fetch(fullUrl, { method: 'GET' });
                 
                 if (response.ok) {
@@ -467,7 +470,9 @@
             }
 
             if (response.ok) {
-                console.log('Data sent successfully.');
+                // Optional: Read the JSON response to confirm what the server received
+                const serverResponse = await response.json(); 
+                console.log('Server confirmed data:', serverResponse);
                 showTemporaryMessage('Data Sent!', 1500, 'bg-green-500');
             } else {
                 console.error('Failed to send data. Status:', response.status);
