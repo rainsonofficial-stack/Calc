@@ -12,14 +12,8 @@
     <meta name="apple-mobile-app-status-bar-style" content="black-translucent">
     <meta name="application-name" content="Calculator">
 
-    <!-- FINAL PWA FIX: Embedded Manifest (Base64 Data URI) -->
-    <!-- This is crucial for forcing standalone display mode and ensuring the icon is picked up reliably on Android Chrome. -->
-    <link rel="manifest" href="data:application/json;base64,eyJkaXNwbGF5IjogInN0YW5kYWxvbmUiLCAibmFtZSI6ICJDYWxjdWxhdG9yIiwgInNob3J0X25hbWUiOiAiQ2FsYyIsICJzdGFydF91cmwiOiAiLi8iLCAiaWNvbnMiOiBbeyJzcmMiOiAiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SMEtHZ29BQUFBTlNVaEVVRUFJQUJBQ0FNTUFBQVdkT08ycjVBQUFBRDFCTUFMVlJFVUFBQURQM01WRVVVQUFBRzVCMlY0RTRBLCBkZXNpZ24taW1hZ2Ugc3R5bGVkIGZvciBhcHBsZS10b3VjaC1pY29uIG9yIHRvb2xpdC1pY29uIHdpdGggYmxhY2stYW5kLXdoaXRlIGVsaXBzZXMiLCJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGUiOiAiaW1hZ2UvcG5nIn0sIHsic3JjIjogImRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUncwS2dnb0FBQUFOU1VoRVVFRUFJQUJBQ0FNTUFBQVdkT08ycjVBQUFBRDFCTUFMVlJFVUFBQURQM01WRVVVQUFBRzVCMlY0RTRBLCBkZXNpZ24taW1hZ2Ugc3R5bGVkIGZvciBhcHBsZS10b3VjaC1pY29uIG9yIHRvb2xpdC1pY29uIHdpdGggYmxhY2stYW5kLXdoaXRlIGVsaXBzZXMiLCJzaXplcyI6ICIxOTJ4MTkyIiwgInR5cGUiOiAiaW1hZ2UvcG5nIn1dfQ==">
-
-    <!-- Embedded Icon (as Data URI - for iOS fallback and general touch icons) -->
-    <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAwDO2rAAAAD1BMVEUAAADw8P/y8v/29v/7+/+Vb6+QAAAAAXRSTlMAQObYZgAAAIZJREFUWMO1zcENgDAIBED03+z5FkYFkRkY4n7w9Qj8E76Cj6Ck6Ck6hS9+0l+X0/gL/8Wf8Bd8BZ+gZOgpOopn6Cj+GgT/9Y17Bf0jN+gduUJ30Fh0lFr+C1c18v4F6A24gNtwB+6gO3AH7qC/h5h8f+L5F+J2j/gZl6p1/9y2gq+GfwAAAAASUVORK5CYII=">
-    <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACABAMAAAAwDO2rAAAAD1BMVEUAAADw8P/y8v/29v/7+/+Vb6+QAAAAAXRSTlMAQObYZgAAAIZJREFUWMO1zcENgDAIBED03+z5FkYFkRkY4n7w9Qj8E76Cj6Ck6Ck6hS9+0l+X0/gL/8Wf8Bd8BZ+gZOgpOopn6Cj+GgT/9Y17Bf0jN+gduUJ30Fh0lFr+C1c18v4F6A24gNtwB+6gO3AH7qC/h5h8f+L5F+J2j/gZl6p1/9y2gq+GfwAAAAASUVORK5CYII=">
-
+    <!-- CRITICAL FIX: Linking to the external manifest.json file -->
+    <link rel="manifest" href="manifest.json">
 
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
