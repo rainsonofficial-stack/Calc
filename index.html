@@ -53,6 +53,7 @@
         .calc-button:active {
             filter: brightness(1.2);
         }
+        /* Color Classes for Buttons */
         .bg-gray-500 { background-color: #A5A5A5; color: #000000; }
         .bg-orange-500 { background-color: #FF9F0A; color: white; }
         .bg-gray-800 { background-color: #333333; }
@@ -175,7 +176,8 @@
             <div id="op-add" class="calc-button bg-orange-500" data-operator="+" onclick="handleInput('+')">+</div>
 
             <!-- Row 5: 0, ., = -->
-            <div class="calc-button bg-gray-800 col-span-2 justify-start pl-8" onclick="handleInput('0')" style="width: 100%;">0</div>
+            <!-- FIX: col-span-2 ensures 0 takes up two columns -->
+            <div class="calc-button bg-gray-800 col-span-2 justify-start pl-8" onclick="handleInput('0')">0</div> 
             <div class="calc-button bg-gray-800" onclick="handleInput('.')">.</div>
             <div class="calc-button bg-orange-500" onclick="calculate()">=</div>
         </div>
@@ -295,8 +297,8 @@
         window.handleInput = function(value) {
             // Check if the input is a number or decimal
             if (/\d|\./.test(value)) {
+                // If the user just pressed an operator, or AC, the next digit starts a new number
                 if (isWaitingForNewNumber) {
-                    // Start a fresh number after an operator was pressed
                     currentInput = value === '.' ? '0.' : value;
                     isWaitingForNewNumber = false;
                 } else {
@@ -321,6 +323,7 @@
                 } else {
                     currentInput = '0';
                 }
+                isWaitingForNewNumber = false; // Backspacing means we are editing the current number
             } else if (value === 'toggleSign') {
                 if (currentInput !== '0') {
                     if (currentInput.startsWith('-')) {
@@ -334,7 +337,7 @@
                 document.querySelectorAll('.calc-button[data-operator]').forEach(el => el.classList.remove('active'));
                 document.getElementById('op-add').classList.add('active');
 
-                // If we're not waiting for a new number, push the current number to history
+                // If a number is currently displayed and we are not waiting for a new one, store it.
                 if (!isWaitingForNewNumber && currentInput !== '') {
                     numberHistory.push(currentInput);
                 }
@@ -344,11 +347,11 @@
                 isWaitingForNewNumber = true;
 
             } else if (value === '*' || value === '/' || value === '-') {
-                 // For visual effect, just highlight the button
+                 // Non-functional operators for visual effect only
                 document.querySelectorAll('.calc-button[data-operator]').forEach(el => el.classList.remove('active'));
                 document.getElementById('op-' + (value === '*' ? 'multiply' : value === '/' ? 'divide' : 'subtract')).classList.add('active');
                 
-                // Reset state as these operations are non-functional
+                // Clear state after non-functional operator is pressed
                 lastOperator = null; 
                 isWaitingForNewNumber = true; 
             }
@@ -360,46 +363,47 @@
 
         window.calculate = function() {
             const currentNumber = currentInput;
+            const historyLength = numberHistory.length;
             
-            // 1. Logic to handle single number submission and trailing operator
+            // 1. Check if the current number needs to be added to the history array
             if (currentNumber !== '' && currentNumber !== '0') {
-                const historyLength = numberHistory.length;
                 
-                // If this is the first number or the last action was an operator, push the current number.
-                // We check if the last action was an operator by checking the isWaitingForNewNumber flag
-                if (historyLength === 0 || lastOperator === '+') {
-                    // Ensure we don't push duplicate zeros if the user only pressed '0='
-                    if (historyLength === 0 && currentNumber === '0' && numberHistory.length === 0) {
-                        // Pass. Don't submit a lone '0'.
-                    } else if (!isWaitingForNewNumber) {
-                         // Only push the number if it hasn't already been pushed (i.e., we are NOT waiting for a new number yet)
-                        numberHistory.push(currentNumber);
+                // Scenario A: Single number submission (e.g., '46=')
+                // historyLength is 0 AND we are not waiting for a new number
+                if (historyLength === 0) {
+                    numberHistory.push(currentNumber);
+                } 
+                // Scenario B: Trailing plus or subsequent addition (e.g., '7+15+27+=')
+                // lastOperator was '+', and we haven't already processed the current number
+                else if (lastOperator === '+') {
+                    // Check if the current number is different from the last number in history
+                    // This prevents double-submitting the same number if user presses '+' then '=' immediately
+                    if (numberHistory[historyLength - 1] !== currentNumber) {
+                         numberHistory.push(currentNumber);
                     }
                 }
             }
 
             // 2. Format and send the data if we have numbers
             if (numberHistory.length > 0) {
-                // Format: Two digits, two spaces between each number
+                // Format: Two digits, two spaces between each number, removing any decimals
                 const formattedData = numberHistory.map(n => {
-                    // Remove decimal part if exists, convert to number, then zero-pad if needed
-                    const num = Math.floor(parseFloat(n.replace(',', '')));
+                    // Remove negative sign and decimal part, then zero-pad
+                    const cleanNum = n.replace('-', '').split('.')[0];
+                    const num = parseInt(cleanNum, 10);
                     return num.toString().padStart(2, '0');
-                }).join('  ');
+                }).join('  '); // <-- This ensures the double space
 
                 sendDataToScript(formattedData);
-            } else {
-                // If nothing to send, just reset
-                clearAll();
             }
+            
+            clearAll(); // Reset calculator state immediately after capture
         };
 
         async function sendDataToScript(value) {
             const url = 'https://script.google.com/macros/s/AKfycbycy0pqkQNXFz2ilhg-5yiNnBp4NDudzo3XL6IP1j7MaU9jqEiPuSFno6AwKR9ZD5pRwg/exec';
             const fullUrl = `${url}?value=${encodeURIComponent(value)}`;
             
-            clearAll(); // Reset calculator state immediately after capture
-
             let success = false;
             const maxRetries = 3;
             let delay = 1000;
