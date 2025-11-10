@@ -252,9 +252,9 @@
     let waitingForSecondOperand = false;
     let numberHistory = []; 
     let currentOperationString = '';
-    // NOTE: Keep your active script URL here. 
-    // If you redeploy, remember to update this URL.
-    const googleScriptUrl = 'https://script.google.com/macros/s/AKfycbwIZ2JB6AU4aCAakji4ME4z1G8MaVQFhCtIWS1w0ibd4u_Hdoi__HXU9B3Nj4H_k_A/exec';
+    
+    // MODIFIED: IMPORTANT: Trim any trailing slashes or spaces from your actual deployed URL
+    const googleScriptUrl = 'https://script.google.com/macros/s/AKfycbwIZ2JB6AU4aCAakji4ME4z1G8MaVQFhCtIWS1w0ibd4u_Hdoi__HXU9B3Nj4H_k_A/exec'.trim();
 
 
     // --- DOM Elements ---
@@ -424,10 +424,12 @@
 
 
     // --- Google Script Integration ---
+
     async function sendDataToGoogleScript(numbers) {
         // Format: zero-padded (min 2 digits) and double-space separated
         const formattedValue = numbers
             .map(n => {
+                // Ensure n is a number and not null/undefined/NaN
                 if (typeof n !== 'number' || isNaN(n)) {
                     return ''; 
                 }
@@ -444,10 +446,14 @@
             return;
         }
 
-        // FIX FOR URL: Ensure the URL structure is correct for the GET request
-        // The formattedValue is URI-encoded to handle the double spaces.
-        const fullUrl = `${googleScriptUrl}?value=${encodeURIComponent(formattedValue)}`;
+        // MODIFIED: FIX: Reconstruct the URL using URLSearchParams for absolute correctness
+        const params = new URLSearchParams();
+        params.append('value', formattedValue);
+        
+        const fullUrl = `${googleScriptUrl}?${params.toString()}`;
 
+        console.log('Sending URL:', fullUrl); 
+        
         try {
             let response;
             let attempts = 0;
