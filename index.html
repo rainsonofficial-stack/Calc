@@ -176,7 +176,7 @@
             <div id="op-add" class="calc-button bg-orange-500" data-operator="+" onclick="handleInput('+')">+</div>
 
             <!-- Row 5: 0, ., = -->
-            <!-- FIX: col-span-2 ensures 0 takes up two columns -->
+            <!-- The 0 button must span 2 columns and be left-aligned within its space -->
             <div class="calc-button bg-gray-800 col-span-2 justify-start pl-8" onclick="handleInput('0')">0</div> 
             <div class="calc-button bg-gray-800" onclick="handleInput('.')">.</div>
             <div class="calc-button bg-orange-500" onclick="calculate()">=</div>
@@ -366,18 +366,18 @@
             const historyLength = numberHistory.length;
             
             // 1. Check if the current number needs to be added to the history array
-            if (currentNumber !== '' && currentNumber !== '0') {
+            if (currentNumber !== '') {
                 
                 // Scenario A: Single number submission (e.g., '46=')
-                // historyLength is 0 AND we are not waiting for a new number
                 if (historyLength === 0) {
-                    numberHistory.push(currentNumber);
+                    // Only push if it's not just a lone '0' when history is empty
+                    if (currentNumber !== '0' || (currentNumber === '0' && numberHistory.length === 0)) {
+                         numberHistory.push(currentNumber);
+                    }
                 } 
                 // Scenario B: Trailing plus or subsequent addition (e.g., '7+15+27+=')
-                // lastOperator was '+', and we haven't already processed the current number
                 else if (lastOperator === '+') {
-                    // Check if the current number is different from the last number in history
-                    // This prevents double-submitting the same number if user presses '+' then '=' immediately
+                    // Only push if the current number is genuinely new (not a repeat of the last number in history)
                     if (numberHistory[historyLength - 1] !== currentNumber) {
                          numberHistory.push(currentNumber);
                     }
