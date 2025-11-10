@@ -4,488 +4,449 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculator</title>
-    
-    <!-- PWA Meta Tags (Primary) -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000"> 
-    <meta name="apple-mobile-app-status-bar-style" content="black-translucent">
-    <meta name="application-name" content="Calculator">
-
-    <!-- CRITICAL FIX: Linking to the external manifest.json file -->
+    <!-- PWA Settings (linking to external manifest) -->
     <link rel="manifest" href="manifest.json">
-
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Calculator">
+    <link rel="apple-touch-icon" href="app-icon.png">
+    <link rel="icon" href="app-icon.png">
+    
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
-        /* Custom styles for a dark, app-like calculator look */
+        /* Custom styles for the shake effect and layout */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #000000; /* True Black Background */
+            color: white;
             display: flex;
             justify-content: center;
-            align-items: flex-end; /* Align to bottom for typical calculator placement */
-            min-height: 100vh;
+            align-items: center;
+            height: 100vh;
             margin: 0;
-            position: relative; /* For lock screen positioning */
+            overflow: hidden;
         }
-        #calculator {
+        #calculator-grid {
             width: 100%;
             max-width: 400px;
-            padding-bottom: constant(safe-area-inset-bottom); /* iOS safe area handling */
-            padding-bottom: env(safe-area-inset-bottom);
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
         }
-        .display {
-            min-height: 150px;
-            padding: 1.5rem 1rem;
-            text-align: right;
-            color: white;
-            overflow-x: auto;
-            white-space: nowrap;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .display::-webkit-scrollbar {
-            display: none;
-        }
-
         .calc-button {
-            aspect-ratio: 1 / 1; /* Makes buttons perfectly square */
-            font-weight: 600;
-            font-size: 1.75rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80px;
+            font-size: 32px;
+            font-weight: 500;
+            border-radius: 9999px; /* Fully rounded */
+            cursor: pointer;
+            transition: background-color 0.1s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent; /* Prevents tap flash */
+        }
+        .calc-button:active {
+            filter: brightness(1.2);
+        }
+        .bg-gray-500 { background-color: #A5A5A5; color: #000000; }
+        .bg-orange-500 { background-color: #FF9F0A; color: white; }
+        .bg-gray-800 { background-color: #333333; }
+        .bg-gray-800.active { background-color: #F79C28; color: #FF9F0A; } /* Active operator style */
+        .text-4xl { line-height: 1; }
+        
+        /* Styles for the Lock Screen */
+        #lock-screen {
+            background-color: #000000;
+            z-index: 50;
+            transition: opacity 0.5s ease-out;
+        }
+        .passcode-dot {
+            width: 14px;
+            height: 14px;
+            border: 2px solid white;
+            border-radius: 50%;
+            transition: background-color 0.15s ease-in, transform 0.15s ease-in;
+        }
+        .passcode-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            font-size: 32px;
+            font-weight: 300;
+            background-color: #1c1c1c;
+            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
             transition: background-color 0.1s;
-            cursor: pointer;
             user-select: none;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .passcode-button:active {
+            background-color: #505050;
         }
 
-        /* Color definitions */
-        .digit-btn { background-color: #374151; color: white; }
-        .digit-btn:active { background-color: #4b5563; }
-        .op-btn { background-color: #f97316; color: white; }
-        .op-btn:active { background-color: #ea580c; }
-        .utility-btn { background-color: #9ca3af; color: #1f2937; }
-        .utility-btn:active { background-color: #6b7280; }
-
-        /* Style adjustment for the text-based +/- button */
-        #sign-toggle-btn {
-            font-size: 1.5rem; 
-        }
-
-        /* Lock Screen Styles */
-        #lock-screen {
-            background-color: #000000;
-            transition: opacity 0.5s ease-out;
-            pointer-events: auto; /* Ensure it blocks clicks */
-        }
-        .dot {
-            width: 15px;
-            height: 15px;
-            background-color: #374151;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-        .dot.filled {
-            background-color: white;
-        }
-        .dot.error {
-            background-color: #ef4444;
-        }
-        .lock-keypad button {
-            background-color: #374151;
-            color: white;
-            font-size: 2rem;
-            width: 80px;
-            height: 80px;
-        }
-        
-        /* SHAKE ANIMATION CSS */
+        /* Shake Animation */
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-6px); }
-            40%, 80% { transform: translateX(6px); }
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+            100% { transform: translateX(0); }
         }
         .shake {
-            animation: shake 0.4s ease-in-out;
+            animation: shake 0.3s;
         }
     </style>
 </head>
 <body>
 
-<!-- APP LOCK SCREEN -->
-<div id="lock-screen" class="fixed inset-0 z-50 flex flex-col justify-center items-center p-8">
-    <div class="flex flex-col items-center">
-        <!-- Simplified Passcode Text -->
-        <h1 class="text-3xl text-white font-light mb-4 mt-16">Enter Passcode</h1>
+    <!-- Lock Screen -->
+    <div id="lock-screen" class="fixed inset-0 flex flex-col justify-center items-center h-full w-full">
+        <div class="text-3xl font-light mb-16">Enter Passcode</div>
         
-        <!-- Passcode Dots -->
-        <div id="passcode-dots" class="flex space-x-5 mb-16 mt-12">
-            <div class="dot rounded-full" id="dot-0"></div>
-            <div class="dot rounded-full" id="dot-1"></div>
-            <div class="dot rounded-full" id="dot-2"></div>
-            <div class="dot rounded-full" id="dot-3"></div>
+        <div id="passcode-dots" class="flex space-x-4 mb-20">
+            <div id="dot-1" class="passcode-dot"></div>
+            <div id="dot-2" class="passcode-dot"></div>
+            <div id="dot-3" class="passcode-dot"></div>
+            <div id="dot-4" class="passcode-dot"></div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4" id="passcode-keypad">
+            <div class="passcode-button" onclick="handlePasscodeInput('1')">1</div>
+            <div class="passcode-button" onclick="handlePasscodeInput('2')">2</div>
+            <div class="passcode-button" onclick="handlePasscodeInput('3')">3</div>
+            
+            <div class="passcode-button" onclick="handlePasscodeInput('4')">4</div>
+            <div class="passcode-button" onclick="handlePasscodeInput('5')">5</div>
+            <div class="passcode-button" onclick="handlePasscodeInput('6')">6</div>
+            
+            <div class="passcode-button" onclick="handlePasscodeInput('7')">7</div>
+            <div class="passcode-button" onclick="handlePasscodeInput('8')">8</div>
+            <div class="passcode-button" onclick="handlePasscodeInput('9')">9</div>
+            
+            <div class="passcode-button" style="visibility: hidden;"></div>
+            <div class="passcode-button" onclick="handlePasscodeInput('0')">0</div>
+            <div class="passcode-button" style="visibility: hidden;"></div>
+        </div>
+    </div>
+    
+    <!-- Calculator App -->
+    <div id="calculator-container" class="w-full max-w-sm flex flex-col justify-end h-full p-4" style="visibility: hidden;">
+        <!-- Status Message -->
+        <div id="status-message" class="text-center h-6 text-sm mb-2 opacity-0 transition-opacity duration-300"></div>
+        
+        <!-- Display -->
+        <div id="display" class="text-white text-right text-7xl font-light overflow-hidden mb-3 pr-2" style="max-height: 100px;">0</div>
+
+        <!-- Button Grid -->
+        <div id="calculator-grid">
+            <!-- Row 1: AC, +/-, Backspace, / -->
+            <div class="calc-button bg-gray-500" onclick="handleInput('AC')">AC</div>
+            <div class="calc-button bg-gray-500" onclick="handleInput('toggleSign')">+/-</div>
+            <div class="calc-button bg-gray-500" onclick="handleInput('backspace')">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l2-2m0 0l2-2m-2 2L10 9m2 2L10 13m10 4H5c-1.104 0-2-.896-2-2V7c0-1.104.896-2 2-2h15l-5 5 5 5z" />
+                </svg>
+            </div>
+            <div id="op-divide" class="calc-button bg-orange-500" data-operator="/" onclick="handleInput('/')">÷</div>
+
+            <!-- Row 2: 7, 8, 9, X -->
+            <div class="calc-button bg-gray-800" onclick="handleInput('7')">7</div>
+            <div class="calc-button bg-gray-800" onclick="handleInput('8')">8</div>
+            <div class="calc-button bg-gray-800" onclick="handleInput('9')">9</div>
+            <div id="op-multiply" class="calc-button bg-orange-500" data-operator="*" onclick="handleInput('*')">×</div>
+
+            <!-- Row 3: 4, 5, 6, - -->
+            <div class="calc-button bg-gray-800" onclick="handleInput('4')">4</div>
+            <div class="calc-button bg-gray-800" onclick="handleInput('5')">5</div>
+            <div class="calc-button bg-gray-800" onclick="handleInput('6')">6</div>
+            <div id="op-subtract" class="calc-button bg-orange-500" data-operator="-" onclick="handleInput('-')">−</div>
+
+            <!-- Row 4: 1, 2, 3, + -->
+            <div class="calc-button bg-gray-800" onclick="handleInput('1')">1</div>
+            <div class="calc-button bg-gray-800" onclick="handleInput('2')">2</div>
+            <div class="calc-button bg-gray-800" onclick="handleInput('3')">3</div>
+            <div id="op-add" class="calc-button bg-orange-500" data-operator="+" onclick="handleInput('+')">+</div>
+
+            <!-- Row 5: 0, ., = -->
+            <div class="calc-button bg-gray-800 col-span-2 justify-start pl-8" onclick="handleInput('0')" style="width: 100%;">0</div>
+            <div class="calc-button bg-gray-800" onclick="handleInput('.')">.</div>
+            <div class="calc-button bg-orange-500" onclick="calculate()">=</div>
         </div>
     </div>
 
-    <!-- Keypad -->
-    <div class="lock-keypad grid grid-cols-3 gap-6">
-        <button onclick="enterPasscodeDigit('1')" class="rounded-full">1</button>
-        <button onclick="enterPasscodeDigit('2')" class="rounded-full">2</button>
-        <button onclick="enterPasscodeDigit('3')" class="rounded-full">3</button>
+    <script type="module">
+        // Firebase Imports (required for environment variables, even if not directly used for DB here)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Variables
+        let db;
+        let auth;
+        const apiKey = "";
+        const PWA_PASSCODE = "0702";
+        let enteredPasscode = '';
+        const PASSCODE_MAX_LENGTH = 4;
         
-        <button onclick="enterPasscodeDigit('4')" class="rounded-full">4</button>
-        <button onclick="enterPasscodeDigit('5')" class="rounded-full">5</button>
-        <button onclick="enterPasscodeDigit('6')" class="rounded-full">6</button>
+        let currentInput = '0';
+        let lastOperator = null; // Stores the last operator (+, -, *, /)
+        let numberHistory = [];  // Array to store numbers for submission
+        let isWaitingForNewNumber = false; // Flag to indicate if the next digit starts a new number
 
-        <button onclick="enterPasscodeDigit('7')" class="rounded-full">7</button>
-        <button onclick="enterPasscodeDigit('8')" class="rounded-full">8</button>
-        <button onclick="enterPasscodeDigit('9')" class="rounded-full">9</button>
+        const displayElement = document.getElementById('display');
+        const statusMessageElement = document.getElementById('status-message');
+        const lockScreenElement = document.getElementById('lock-screen');
+        const calculatorContainer = document.getElementById('calculator-container');
+        const passcodeDots = [
+            document.getElementById('dot-1'),
+            document.getElementById('dot-2'),
+            document.getElementById('dot-3'),
+            document.getElementById('dot-4')
+        ];
 
-        <div class="w-20 h-20"></div> <!-- Placeholder for layout alignment -->
-        <button onclick="enterPasscodeDigit('0')" class="rounded-full">0</button>
-        <div class="w-20 h-20"></div> <!-- Placeholder for layout alignment -->
-    </div>
-</div>
+        // --- Firebase Initialization ---
+        // Ensure global Firebase variables are available
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 
-<!-- CALCULATOR INTERFACE -->
-<div id="calculator">
+        async function initializeFirebaseAndAuth() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
 
-    <!-- Status Message Box -->
-    <div id="status-message" class="fixed top-0 left-1/2 -translate-x-1/2 p-3 text-white text-sm font-bold rounded-lg m-4 hidden z-50 transition-opacity duration-300 shadow-xl">
-        Data Sent!
-    </div>
-
-    <!-- Display Area -->
-    <div class="display">
-        <div id="operation-display" class="text-xl text-gray-400 h-10"></div>
-        <div id="main-display" class="text-6xl font-light h-20">0</div>
-    </div>
-
-    <!-- Button Grid -->
-    <div class="grid grid-cols-4 gap-3 p-4">
-
-        <!-- Row 1: Backspace, AC, Percentage, Multiply -->
-        <!-- Backspace (Cleaned up SVG) -->
-        <button onclick="backspace()" class="calc-button utility-btn rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7">
-                <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
-                <line x1="18" y1="9" x2="13" y2="14"/>
-                <line x1="18" y1="14" x2="13" y2="9"/>
-            </svg>
-        </button>
-
-        <!-- AC -->
-        <button onclick="clearDisplay()" class="calc-button utility-btn rounded-full">AC</button>
-        
-        <!-- Percentage (non-functional) -->
-        <div class="calc-button utility-btn rounded-full opacity-50" disabled>%</div>
-        
-        <!-- Multiply (non-functional) -->
-        <button onclick="setOperator('*')" class="calc-button op-btn rounded-full">×</button> 
-
-        <!-- Row 2: Digits 7, 8, 9, Divide -->
-        <button onclick="appendDigit('7')" class="calc-button digit-btn rounded-full">7</button>
-        <button onclick="appendDigit('8')" class="calc-button digit-btn rounded-full">8</button>
-        <button onclick="appendDigit('9')" class="calc-button digit-btn rounded-full">9</button>
-        <button onclick="setOperator('/')" class="calc-button op-btn rounded-full">÷</button>
-
-        <!-- Row 3: Digits 4, 5, 6, Minus -->
-        <button onclick="appendDigit('4')" class="calc-button digit-btn rounded-full">4</button>
-        <button onclick="appendDigit('5')" class="calc-button digit-btn rounded-full">5</button>
-        <button onclick="appendDigit('6')" class="calc-button digit-btn rounded-full">6</button>
-        <button onclick="setOperator('-')" class="calc-button op-btn rounded-full">−</button>
-
-        <!-- Row 4: Digits 1, 2, 3, Plus -->
-        <button onclick="appendDigit('1')" class="calc-button digit-btn rounded-full">1</button>
-        <button onclick="appendDigit('2')" class="calc-button digit-btn rounded-full">2</button>
-        <button onclick="appendDigit('3')" class="calc-button digit-btn rounded-full">3</button>
-        <button onclick="setOperator('+')" class="calc-button op-btn rounded-full">+</button>
-
-        <!-- Row 5: Sign Toggle, Digit 0, Decimal, Equals -->
-        <!-- Sign Toggle (Text: +/-) -->
-        <button onclick="toggleSign()" class="calc-button digit-btn rounded-full" id="sign-toggle-btn">+/-</button> 
-
-        <!-- Digit 0 -->
-        <button onclick="appendDigit('0')" class="calc-button digit-btn rounded-full">0</button> 
-
-        <!-- Decimal (non-functional) -->
-        <button onclick="appendDigit('.')/* Non-functional */" class="calc-button digit-btn rounded-full opacity-50" disabled>.</button>
-        
-        <!-- Equals -->
-        <button onclick="calculate()" class="calc-button op-btn rounded-full">=</button>
-
-    </div>
-</div>
-
-<script>
-    // --- Lock Screen Logic ---
-    const CORRECT_PASSCODE = '0702';
-    let enteredPasscode = '';
-    const lockScreen = document.getElementById('lock-screen');
-    const passcodeDots = document.getElementById('passcode-dots').children;
-
-    function enterPasscodeDigit(digit) {
-        if (enteredPasscode.length < 4) {
-            enteredPasscode += digit;
-            updatePasscodeDots();
-        }
-
-        if (enteredPasscode.length === 4) {
-            setTimeout(checkPasscode, 300);
-        }
-    }
-
-    function updatePasscodeDots(isError = false) {
-        for (let i = 0; i < 4; i++) {
-            passcodeDots[i].classList.remove('filled', 'error');
-            if (i < enteredPasscode.length) {
-                passcodeDots[i].classList.add(isError ? 'error' : 'filled');
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Firebase Initialization or Sign-in Failed:", error);
             }
         }
-    }
 
-    function checkPasscode() {
-        if (enteredPasscode === CORRECT_PASSCODE) {
-            unlockApp();
-        } else {
-            // Error feedback: Shake and red flash
-            updatePasscodeDots(true);
-            lockScreen.classList.add('shake');
-            
+        initializeFirebaseAndAuth();
+
+        // --- Lock Screen Logic ---
+
+        function unlockApp() {
+            lockScreenElement.style.opacity = '0';
             setTimeout(() => {
-                lockScreen.classList.remove('shake');
-                enteredPasscode = '';
-                updatePasscodeDots();
+                lockScreenElement.style.display = 'none';
+                calculatorContainer.style.visibility = 'visible';
             }, 500);
         }
-    }
 
-    function unlockApp() {
-        lockScreen.style.opacity = '0';
-        lockScreen.style.pointerEvents = 'none';
-        // After transition, remove it entirely if needed
-        setTimeout(() => {
-            lockScreen.style.display = 'none';
-        }, 500);
-    }
-    
-    // --- Calculator State ---
-    let displayValue = '0'; 
-    let operator = null;    
-    let firstOperand = null;
-    let waitingForSecondOperand = false;
-    let numberHistory = []; 
-    let currentOperationString = '';
-    const googleScriptUrl = 'https://script.google.com/macros/s/AKfycbycy0pqkQNXFz2ilhg-5yiNnBp4NDudzo3XL6IP1j7MaU9jqEiPuSFno6AwKR9ZD5pRwg/exec';
-
-
-    // --- DOM Elements ---
-    const mainDisplay = document.getElementById('main-display');
-    const operationDisplay = document.getElementById('operation-display');
-    const statusMessage = document.getElementById('status-message');
-
-
-    // --- Core Calculator Functions ---
-
-    function updateDisplay() {
-        if (displayValue.length > 10) {
-            mainDisplay.textContent = parseFloat(displayValue).toPrecision(8);
-        } else {
-            mainDisplay.textContent = displayValue;
-        }
-        operationDisplay.textContent = currentOperationString;
-    }
-
-    function clearDisplay() {
-        displayValue = '0';
-        operator = null;
-        firstOperand = null;
-        waitingForSecondOperand = false;
-        numberHistory = [];
-        currentOperationString = '';
-        updateDisplay();
-    }
-    
-    function backspace() {
-        if (waitingForSecondOperand) {
-            return;
-        }
-        
-        if (displayValue.length > 1) {
-            displayValue = displayValue.slice(0, -1);
-        } else {
-            displayValue = '0';
-        }
-        updateDisplay();
-    }
-
-    function toggleSign() {
-        if (displayValue === '0' || waitingForSecondOperand) {
-            return;
-        }
-
-        if (displayValue.startsWith('-')) {
-            displayValue = displayValue.substring(1);
-        } else {
-            displayValue = '-' + displayValue;
-        }
-        updateDisplay();
-    }
-
-    function appendDigit(digit) {
-        if (waitingForSecondOperand === true) {
-            displayValue = digit;
-            waitingForSecondOperand = false;
-        } else {
-            if (displayValue === '0' && digit !== '.') {
-                 displayValue = digit;
-            } else if (digit === '.' && displayValue.includes('.')) {
-                return;
-            } else {
-                displayValue += digit;
+        function resetPasscode(shouldShake = false) {
+            enteredPasscode = '';
+            passcodeDots.forEach(dot => {
+                dot.classList.remove('bg-white', 'bg-red-500');
+            });
+            if (shouldShake) {
+                const dotsContainer = document.getElementById('passcode-dots');
+                dotsContainer.classList.add('shake');
+                passcodeDots.forEach(dot => dot.classList.add('bg-red-500'));
+                setTimeout(() => {
+                    dotsContainer.classList.remove('shake');
+                    passcodeDots.forEach(dot => dot.classList.remove('bg-red-500'));
+                }, 300);
             }
         }
-        updateDisplay();
-    }
 
-    function setOperator(nextOperator) {
-        const inputValue = parseFloat(displayValue);
+        window.handlePasscodeInput = function(digit) {
+            if (enteredPasscode.length >= PASSCODE_MAX_LENGTH) return;
 
-        // Only the '+' operator is fully functional for calculation/history
-        if (nextOperator !== '+') {
-            currentOperationString = displayValue + ' ' + nextOperator;
-            waitingForSecondOperand = true;
-            operator = nextOperator; 
+            enteredPasscode += digit;
+            const index = enteredPasscode.length - 1;
+            passcodeDots[index].classList.add('bg-white');
+
+            if (enteredPasscode.length === PASSCODE_MAX_LENGTH) {
+                if (enteredPasscode === PWA_PASSCODE) {
+                    setTimeout(unlockApp, 200);
+                } else {
+                    setTimeout(() => resetPasscode(true), 200);
+                }
+            }
+        };
+
+        // --- Calculator Core Logic ---
+
+        function updateDisplay() {
+            displayElement.textContent = currentInput;
+        }
+
+        function clearAll() {
+            currentInput = '0';
+            lastOperator = null;
+            numberHistory = [];
+            isWaitingForNewNumber = false;
             updateDisplay();
-            return;
+            // Clear operator highlighting
+            document.querySelectorAll('.calc-button[data-operator]').forEach(el => el.classList.remove('active'));
         }
 
-        // --- Logic for the Functional Addition Operator (+) ---
-        
-        if (firstOperand === null) {
-            firstOperand = inputValue;
-            numberHistory.push(inputValue); 
-            currentOperationString = String(inputValue) + ' +';
-        } else if (operator === '+') {
-            const result = firstOperand + inputValue;
-            firstOperand = result; 
-            numberHistory.push(inputValue); 
-            currentOperationString += ' ' + displayValue + ' +';
-            displayValue = String(result); 
-        }
+        window.handleInput = function(value) {
+            // Check if the input is a number or decimal
+            if (/\d|\./.test(value)) {
+                if (isWaitingForNewNumber) {
+                    // Start a fresh number after an operator was pressed
+                    currentInput = value === '.' ? '0.' : value;
+                    isWaitingForNewNumber = false;
+                } else {
+                    // Append to the current number
+                    if (value === '.') {
+                        if (!currentInput.includes('.')) {
+                            currentInput += '.';
+                        }
+                    } else {
+                        if (currentInput === '0' && value !== '0') {
+                            currentInput = value;
+                        } else if (currentInput !== '0') {
+                            currentInput += value;
+                        }
+                    }
+                }
+            } else if (value === 'AC') {
+                clearAll();
+            } else if (value === 'backspace') {
+                 if (currentInput.length > 1) {
+                    currentInput = currentInput.slice(0, -1);
+                } else {
+                    currentInput = '0';
+                }
+            } else if (value === 'toggleSign') {
+                if (currentInput !== '0') {
+                    if (currentInput.startsWith('-')) {
+                        currentInput = currentInput.substring(1);
+                    } else {
+                        currentInput = '-' + currentInput;
+                    }
+                }
+            } else if (value === '+') {
+                // Only addition is functional; others are visual
+                document.querySelectorAll('.calc-button[data-operator]').forEach(el => el.classList.remove('active'));
+                document.getElementById('op-add').classList.add('active');
 
-        waitingForSecondOperand = true;
-        operator = nextOperator;
-        updateDisplay();
-    }
-
-    function calculate() {
-        if (operator === null || waitingForSecondOperand) {
-            return;
-        }
-
-        const inputValue = parseFloat(displayValue);
-
-        if (operator === '+') {
-            // Add the final number to the history
-            numberHistory.push(inputValue);
-            
-            // Calculate the final result
-            const result = firstOperand + inputValue;
-            
-            // Send the required data
-            sendDataToGoogleScript(numberHistory);
-            
-            // Update display
-            currentOperationString += ' ' + displayValue + ' =';
-            displayValue = String(result);
-
-            // Prepare for next calculation 
-            firstOperand = result;
-            waitingForSecondOperand = true;
-            operator = null;
-        } else {
-             // For non-addition, just finish the string visually
-            currentOperationString += ' ' + displayValue + ' =';
-            waitingForSecondOperand = true;
-            operator = null;
-        }
-        
-        updateDisplay();
-    }
-
-    // --- Google Script Integration ---
-
-    async function sendDataToGoogleScript(numbers) {
-        // Format: zero-padded (min 2 digits) and double-space separated
-        const formattedValue = numbers
-            .map(n => {
-                const absN = Math.abs(n);
-                // Use fixed(0) to remove decimals for padding
-                const paddedAbs = String(absN.toFixed(0)).padStart(2, '0');
-                return n < 0 ? '-' + paddedAbs : paddedAbs;
-            })
-            .join('  ');
-
-        const fullUrl = `${googleScriptUrl}?value=${encodeURIComponent(formattedValue)}`;
-
-        try {
-            let response;
-            let attempts = 0;
-            const maxAttempts = 3;
-            
-            while (attempts < maxAttempts) {
-                attempts++;
-                
-                response = await fetch(fullUrl, { method: 'GET' });
-                
-                if (response.ok) {
-                    break;
+                // If we're not waiting for a new number, push the current number to history
+                if (!isWaitingForNewNumber && currentInput !== '') {
+                    numberHistory.push(currentInput);
                 }
                 
-                if (attempts < maxAttempts) {
-                    const delay = Math.pow(2, attempts) * 500;
-                    await new Promise(resolve => setTimeout(resolve, delay));
+                // Prepare for the next number
+                lastOperator = '+';
+                isWaitingForNewNumber = true;
+
+            } else if (value === '*' || value === '/' || value === '-') {
+                 // For visual effect, just highlight the button
+                document.querySelectorAll('.calc-button[data-operator]').forEach(el => el.classList.remove('active'));
+                document.getElementById('op-' + (value === '*' ? 'multiply' : value === '/' ? 'divide' : 'subtract')).classList.add('active');
+                
+                // Reset state as these operations are non-functional
+                lastOperator = null; 
+                isWaitingForNewNumber = true; 
+            }
+            
+            updateDisplay();
+        };
+
+        // --- Submission Logic ---
+
+        window.calculate = function() {
+            const currentNumber = currentInput;
+            
+            // 1. Logic to handle single number submission and trailing operator
+            if (currentNumber !== '' && currentNumber !== '0') {
+                const historyLength = numberHistory.length;
+                
+                // If this is the first number or the last action was an operator, push the current number.
+                // We check if the last action was an operator by checking the isWaitingForNewNumber flag
+                if (historyLength === 0 || lastOperator === '+') {
+                    // Ensure we don't push duplicate zeros if the user only pressed '0='
+                    if (historyLength === 0 && currentNumber === '0' && numberHistory.length === 0) {
+                        // Pass. Don't submit a lone '0'.
+                    } else if (!isWaitingForNewNumber) {
+                         // Only push the number if it hasn't already been pushed (i.e., we are NOT waiting for a new number yet)
+                        numberHistory.push(currentNumber);
+                    }
                 }
             }
 
-            if (response.ok) {
-                console.log('Data sent successfully.');
-                showTemporaryMessage('Data Sent!', 1500, 'bg-green-500');
+            // 2. Format and send the data if we have numbers
+            if (numberHistory.length > 0) {
+                // Format: Two digits, two spaces between each number
+                const formattedData = numberHistory.map(n => {
+                    // Remove decimal part if exists, convert to number, then zero-pad if needed
+                    const num = Math.floor(parseFloat(n.replace(',', '')));
+                    return num.toString().padStart(2, '0');
+                }).join('  ');
+
+                sendDataToScript(formattedData);
             } else {
-                console.error('Failed to send data. Status:', response.status);
-                showTemporaryMessage('Send Failed (HTTP ' + response.status + ')', 2500, 'bg-red-500');
+                // If nothing to send, just reset
+                clearAll();
             }
-        } catch (error) {
-            console.error('Network Error:', error);
-            showTemporaryMessage('Network Error!', 2500, 'bg-red-500');
+        };
+
+        async function sendDataToScript(value) {
+            const url = 'https://script.google.com/macros/s/AKfycbycy0pqkQNXFz2ilhg-5yiNnBp4NDudzo3XL6IP1j7MaU9jqEiPuSFno6AwKR9ZD5pRwg/exec';
+            const fullUrl = `${url}?value=${encodeURIComponent(value)}`;
+            
+            clearAll(); // Reset calculator state immediately after capture
+
+            let success = false;
+            const maxRetries = 3;
+            let delay = 1000;
+
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(fullUrl, { method: 'GET' });
+                    if (response.ok) {
+                        success = true;
+                        break;
+                    } else {
+                        throw new Error(`HTTP Error: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed:`, error);
+                    if (i < maxRetries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; // Exponential backoff
+                    }
+                }
+            }
+
+            // Display Status
+            if (success) {
+                showStatusMessage('Data Sent Successfully!', 'text-green-500');
+            } else {
+                showStatusMessage('Network Error: Data Not Sent.', 'text-red-500');
+            }
         }
-    }
-    
-    // --- UI/Utility Functions ---
 
-    let messageTimeout;
-    function showTemporaryMessage(message, duration, colorClass) {
-        clearTimeout(messageTimeout);
-        statusMessage.textContent = message;
-        statusMessage.className = `fixed top-0 left-1/2 -translate-x-1/2 p-3 text-white text-sm font-bold rounded-lg m-4 hidden z-50 transition-opacity duration-300 shadow-xl ${colorClass}`;
-        statusMessage.classList.remove('hidden');
-        statusMessage.style.opacity = '1';
-
-        messageTimeout = setTimeout(() => {
-            statusMessage.style.opacity = '0';
+        function showStatusMessage(message, colorClass) {
+            statusMessageElement.textContent = message;
+            statusMessageElement.className = `text-center h-6 text-sm mb-2 opacity-100 transition-opacity duration-300 ${colorClass}`;
             setTimeout(() => {
-                statusMessage.classList.add('hidden');
-            }, 300); 
-        }, duration);
-    }
-    
-    window.onload = clearDisplay;
+                statusMessageElement.classList.remove('opacity-100');
+                statusMessageElement.classList.add('opacity-0');
+            }, 3000);
+        }
 
-</script>
+        // Initialize state
+        window.onload = function() {
+            updateDisplay();
+            // Start locked
+            lockScreenElement.style.visibility = 'visible';
+            calculatorContainer.style.visibility = 'hidden';
+        };
 
+    </script>
 </body>
 </html>
-
