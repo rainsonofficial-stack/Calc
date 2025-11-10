@@ -5,17 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculator</title>
     
-    <!-- PWA Meta Tags (Primary) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000"> 
     <meta name="apple-mobile-app-status-bar-style" content="black-translucent">
     <meta name="application-name" content="Calculator">
 
-    <!-- CRITICAL FIX: Linking to the external manifest.json file -->
     <link rel="manifest" href="manifest.json">
 
-    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles for a dark, app-like calculator look */
@@ -114,13 +111,10 @@
 </head>
 <body>
 
-<!-- APP LOCK SCREEN -->
 <div id="lock-screen" class="fixed inset-0 z-50 flex flex-col justify-center items-center p-8">
     <div class="flex flex-col items-center">
-        <!-- Simplified Passcode Text -->
         <h1 class="text-3xl text-white font-light mb-4 mt-16">Enter Passcode</h1>
         
-        <!-- Passcode Dots -->
         <div id="passcode-dots" class="flex space-x-5 mb-16 mt-12">
             <div class="dot rounded-full" id="dot-0"></div>
             <div class="dot rounded-full" id="dot-1"></div>
@@ -129,7 +123,6 @@
         </div>
     </div>
 
-    <!-- Keypad -->
     <div class="lock-keypad grid grid-cols-3 gap-6">
         <button onclick="enterPasscodeDigit('1')" class="rounded-full">1</button>
         <button onclick="enterPasscodeDigit('2')" class="rounded-full">2</button>
@@ -143,31 +136,23 @@
         <button onclick="enterPasscodeDigit('8')" class="rounded-full">8</button>
         <button onclick="enterPasscodeDigit('9')" class="rounded-full">9</button>
 
-        <div class="w-20 h-20"></div> <!-- Placeholder for layout alignment -->
-        <button onclick="enterPasscodeDigit('0')" class="rounded-full">0</button>
-        <div class="w-20 h-20"></div> <!-- Placeholder for layout alignment -->
-    </div>
+        <div class="w-20 h-20"></div> <button onclick="enterPasscodeDigit('0')" class="rounded-full">0</button>
+        <div class="w-20 h-20"></div> </div>
 </div>
 
-<!-- CALCULATOR INTERFACE -->
 <div id="calculator">
 
-    <!-- Status Message Box -->
     <div id="status-message" class="fixed top-0 left-1/2 -translate-x-1/2 p-3 text-white text-sm font-bold rounded-lg m-4 hidden z-50 transition-opacity duration-300 shadow-xl">
         Data Sent!
     </div>
 
-    <!-- Display Area -->
     <div class="display">
         <div id="operation-display" class="text-xl text-gray-400 h-10"></div>
         <div id="main-display" class="text-6xl font-light h-20">0</div>
     </div>
 
-    <!-- Button Grid -->
     <div class="grid grid-cols-4 gap-3 p-4">
 
-        <!-- Row 1: Backspace, AC, Percentage, Multiply -->
-        <!-- Backspace (Cleaned up SVG) -->
         <button onclick="backspace()" class="calc-button utility-btn rounded-full">
             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7">
                 <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
@@ -176,44 +161,33 @@
             </svg>
         </button>
 
-        <!-- AC -->
         <button onclick="clearDisplay()" class="calc-button utility-btn rounded-full">AC</button>
         
-        <!-- Percentage (non-functional) -->
         <div class="calc-button utility-btn rounded-full opacity-50" disabled>%</div>
         
-        <!-- Multiply (non-functional) -->
         <button onclick="setOperator('*')" class="calc-button op-btn rounded-full">×</button> 
 
-        <!-- Row 2: Digits 7, 8, 9, Divide -->
         <button onclick="appendDigit('7')" class="calc-button digit-btn rounded-full">7</button>
         <button onclick="appendDigit('8')" class="calc-button digit-btn rounded-full">8</button>
         <button onclick="appendDigit('9')" class="calc-button digit-btn rounded-full">9</button>
         <button onclick="setOperator('/')" class="calc-button op-btn rounded-full">÷</button>
 
-        <!-- Row 3: Digits 4, 5, 6, Minus -->
         <button onclick="appendDigit('4')" class="calc-button digit-btn rounded-full">4</button>
         <button onclick="appendDigit('5')" class="calc-button digit-btn rounded-full">5</button>
         <button onclick="appendDigit('6')" class="calc-button digit-btn rounded-full">6</button>
         <button onclick="setOperator('-')" class="calc-button op-btn rounded-full">−</button>
 
-        <!-- Row 4: Digits 1, 2, 3, Plus -->
         <button onclick="appendDigit('1')" class="calc-button digit-btn rounded-full">1</button>
         <button onclick="appendDigit('2')" class="calc-button digit-btn rounded-full">2</button>
         <button onclick="appendDigit('3')" class="calc-button digit-btn rounded-full">3</button>
         <button onclick="setOperator('+')" class="calc-button op-btn rounded-full">+</button>
 
-        <!-- Row 5: Sign Toggle, Digit 0, Decimal, Equals -->
-        <!-- Sign Toggle (Text: +/-) -->
         <button onclick="toggleSign()" class="calc-button digit-btn rounded-full" id="sign-toggle-btn">+/-</button> 
 
-        <!-- Digit 0 -->
         <button onclick="appendDigit('0')" class="calc-button digit-btn rounded-full">0</button> 
 
-        <!-- Decimal (non-functional) -->
         <button onclick="appendDigit('.')/* Non-functional */" class="calc-button digit-btn rounded-full opacity-50" disabled>.</button>
         
-        <!-- Equals -->
         <button onclick="calculate()" class="calc-button op-btn rounded-full">=</button>
 
     </div>
@@ -366,49 +340,78 @@
         
         if (firstOperand === null) {
             firstOperand = inputValue;
-            numberHistory.push(inputValue); 
-            currentOperationString = String(inputValue) + ' +';
+            // numberHistory.push(inputValue); // Pushing logic moved to calculate() or a new function
+            currentOperationString = displayValue + ' +';
         } else if (operator === '+') {
+            // New logic: Only push the number if it's not the result from a previous step
+            if (!waitingForSecondOperand) {
+                numberHistory.push(inputValue); 
+            }
+            
             const result = firstOperand + inputValue;
             firstOperand = result; 
-            numberHistory.push(inputValue); 
+            
             currentOperationString += ' ' + displayValue + ' +';
             displayValue = String(result); 
         }
 
+        // Add the current number to history if we're starting a new calculation or continuing an operation
+        if (!waitingForSecondOperand) {
+            numberHistory.push(inputValue);
+        }
+        
         waitingForSecondOperand = true;
         operator = nextOperator;
         updateDisplay();
     }
 
+
     function calculate() {
-        if (operator === null || waitingForSecondOperand) {
-            return;
-        }
-
         const inputValue = parseFloat(displayValue);
-
-        if (operator === '+') {
-            // Add the final number to the history
+        let calculationPerformed = false;
+        
+        // --- 1. Handle Single-Number Entry (e.g., 5, then =) ---
+        if (firstOperand === null && operator === null) {
+            numberHistory.push(inputValue);
+            currentOperationString = displayValue + ' =';
+            calculationPerformed = true;
+        } 
+        
+        // --- 2. Handle Pending Addition (e.g., 5 + 3, then = or 5 +, then = ) ---
+        else if (operator !== null && !waitingForSecondOperand) {
+            
+            // Add the final number to the history if an operation was pending
             numberHistory.push(inputValue);
             
-            // Calculate the final result
-            const result = firstOperand + inputValue;
+            if (operator === '+') {
+                const result = firstOperand + inputValue;
+                displayValue = String(result); 
+                firstOperand = result;
+            }
             
-            // Send the required data
-            sendDataToGoogleScript(numberHistory);
-            
-            // Update display
             currentOperationString += ' ' + displayValue + ' =';
-            displayValue = String(result);
+            calculationPerformed = true;
 
-            // Prepare for next calculation 
-            firstOperand = result;
-            waitingForSecondOperand = true;
-            operator = null;
-        } else {
-             // For non-addition, just finish the string visually
-            currentOperationString += ' ' + displayValue + ' =';
+        } else if (operator === '+' && waitingForSecondOperand) {
+             // Handle case: 5 + = (Pressing = immediately after '+')
+             // Use the first operand as the input value for the history
+             // This fulfills the '5 + =' scenario by pushing '5' to history
+             if(numberHistory.length === 0 && firstOperand !== null) {
+                 numberHistory.push(firstOperand);
+             }
+             currentOperationString += ' =';
+             calculationPerformed = true;
+        }
+        
+        // --- Data Sending Logic (Always executes on a valid '=' press) ---
+        if (calculationPerformed && numberHistory.length > 0) {
+            sendDataToGoogleScript(numberHistory);
+        }
+        
+        // --- Reset State ---
+        // Clear history for the next calculation sequence
+        if (calculationPerformed) {
+            numberHistory = []; 
             waitingForSecondOperand = true;
             operator = null;
         }
@@ -416,18 +419,30 @@
         updateDisplay();
     }
 
+
     // --- Google Script Integration ---
 
     async function sendDataToGoogleScript(numbers) {
         // Format: zero-padded (min 2 digits) and double-space separated
         const formattedValue = numbers
             .map(n => {
+                // Ensure n is a number and not null/undefined/NaN
+                if (typeof n !== 'number' || isNaN(n)) {
+                    return ''; // Skip non-numbers
+                }
                 const absN = Math.abs(n);
                 // Use fixed(0) to remove decimals for padding
-                const paddedAbs = String(absN.toFixed(0)).padStart(2, '0');
+                const paddedAbs = String(Math.floor(absN)).padStart(2, '0');
                 return n < 0 ? '-' + paddedAbs : paddedAbs;
             })
+            .filter(s => s.length > 0) // Remove empty strings from non-numbers
             .join('  ');
+            
+        // Don't send if the history only contained non-numeric values
+        if (formattedValue.length === 0) {
+            console.log('No valid numbers to send.');
+            return;
+        }
 
         const fullUrl = `${googleScriptUrl}?value=${encodeURIComponent(formattedValue)}`;
 
