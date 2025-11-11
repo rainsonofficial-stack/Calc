@@ -563,6 +563,51 @@
     window.onload = clearDisplay;
 
 </script>
+<!-- 👇 ADD THIS at the very end, just before </body> -->
+<style>
+/* --- Samsung Theme --- */
+#calculator.theme-samsung {
+  background-color: #000000;
+}
+#calculator.theme-samsung .display {
+  color: #ffffff;
+}
+#calculator.theme-samsung .digit-btn {
+  background-color: #1c1c1c;
+  color: #ffffff;
+}
+#calculator.theme-samsung .op-btn {
+  background-color: #a0a0a0;
+  color: #000000;
+}
+#calculator.theme-samsung .utility-btn {
+  background-color: #2b2b2b;
+  color: #ffffff;
+}
+#calculator.theme-samsung .calc-button:active {
+  opacity: 0.7;
+}
+</style>
+
+<script>
+// --- Samsung Theme Toggle + Memory ---
+document.addEventListener("DOMContentLoaded", () => {
+  const calcContainer = document.getElementById("calculator");
+  const percentBtn = document.querySelector(".calc-button.utility-btn:nth-child(3)");
+
+  // Load theme from memory
+  const savedTheme = localStorage.getItem("calcTheme");
+  if (savedTheme === "samsung") {
+    calcContainer.classList.add("theme-samsung");
+  }
+
+  // Double-tap toggle
+  percentBtn.addEventListener("dblclick", () => {
+    const samsungActive = calcContainer.classList.toggle("theme-samsung");
+    localStorage.setItem("calcTheme", samsungActive ? "samsung" : "ios");
+  });
+});
+</script>
 
 </body>
 </html>
