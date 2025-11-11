@@ -15,21 +15,20 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styles for a dark, app-like calculator look */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #000000; /* True Black Background */
+            background-color: #000000;
             display: flex;
             justify-content: center;
-            align-items: flex-end; /* Align to bottom for typical calculator placement */
+            align-items: flex-end;
             min-height: 100vh;
             margin: 0;
-            position: relative; /* For lock screen positioning */
+            position: relative;
         }
         #calculator {
             width: 100%;
             max-width: 400px;
-            padding-bottom: constant(safe-area-inset-bottom); /* iOS safe area handling */
+            padding-bottom: constant(safe-area-inset-bottom);
             padding-bottom: env(safe-area-inset-bottom);
         }
         .display {
@@ -42,12 +41,10 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        .display::-webkit-scrollbar {
-            display: none;
-        }
+        .display::-webkit-scrollbar { display: none; }
 
         .calc-button {
-            aspect-ratio: 1 / 1; /* Makes buttons perfectly square */
+            aspect-ratio: 1 / 1;
             font-weight: 600;
             font-size: 1.75rem;
             display: flex;
@@ -59,37 +56,27 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        /* Color definitions */
         .digit-btn { background-color: #374151; color: white; }
         .digit-btn:active { background-color: #4b5563; }
         .op-btn { background-color: #f97316; color: white; }
         .op-btn:active { background-color: #ea580c; }
         .utility-btn { background-color: #9ca3af; color: #1f2937; }
         .utility-btn:active { background-color: #6b7280; }
+        #sign-toggle-btn { font-size: 1.5rem; }
 
-        /* Style adjustment for the text-based +/- button */
-        #sign-toggle-btn {
-            font-size: 1.5rem; 
-        }
-
-        /* Lock Screen Styles */
         #lock-screen {
             background-color: #000000;
             transition: opacity 0.5s ease-out;
-            pointer-events: auto; /* Ensure it blocks clicks */
+            pointer-events: auto;
         }
         .dot {
-            width: 15px;
-            height: 15px;
+            width: 15px; height: 15px;
             background-color: #374151;
             transition: background-color 0.2s, transform 0.1s;
         }
-        .dot.filled {
-            background-color: white;
-        }
-        .dot.error {
-            background-color: #ef4444;
-        }
+        .dot.filled { background-color: white; }
+        .dot.error { background-color: #ef4444; }
+
         .lock-keypad button {
             background-color: #374151;
             color: white;
@@ -97,15 +84,36 @@
             width: 80px;
             height: 80px;
         }
-        
-        /* SHAKE ANIMATION CSS */
+
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-6px); }
             40%, 80% { transform: translateX(6px); }
         }
-        .shake {
-            animation: shake 0.4s ease-in-out;
+        .shake { animation: shake 0.4s ease-in-out; }
+
+        /* ✅ New subtle notification style */
+        .app-toast {
+            background: rgba(60, 60, 60, 0.85);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border-radius: 12px;
+            padding: 10px 16px;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .app-toast.show {
+            opacity: 1;
+            pointer-events: auto;
         }
     </style>
 </head>
@@ -114,7 +122,6 @@
 <div id="lock-screen" class="fixed inset-0 z-50 flex flex-col justify-center items-center p-8">
     <div class="flex flex-col items-center">
         <h1 class="text-3xl text-white font-light mb-4 mt-16">Enter Passcode</h1>
-        
         <div id="passcode-dots" class="flex space-x-5 mb-16 mt-12">
             <div class="dot rounded-full" id="dot-0"></div>
             <div class="dot rounded-full" id="dot-1"></div>
@@ -127,24 +134,20 @@
         <button onclick="enterPasscodeDigit('1')" class="rounded-full">1</button>
         <button onclick="enterPasscodeDigit('2')" class="rounded-full">2</button>
         <button onclick="enterPasscodeDigit('3')" class="rounded-full">3</button>
-        
         <button onclick="enterPasscodeDigit('4')" class="rounded-full">4</button>
         <button onclick="enterPasscodeDigit('5')" class="rounded-full">5</button>
         <button onclick="enterPasscodeDigit('6')" class="rounded-full">6</button>
-
         <button onclick="enterPasscodeDigit('7')" class="rounded-full">7</button>
         <button onclick="enterPasscodeDigit('8')" class="rounded-full">8</button>
         <button onclick="enterPasscodeDigit('9')" class="rounded-full">9</button>
-
-        <div class="w-20 h-20"></div> <button onclick="enterPasscodeDigit('0')" class="rounded-full">0</button>
-        <div class="w-20 h-20"></div> </div>
+        <div class="w-20 h-20"></div>
+        <button onclick="enterPasscodeDigit('0')" class="rounded-full">0</button>
+        <div class="w-20 h-20"></div>
+    </div>
 </div>
 
 <div id="calculator">
-
-    <div id="status-message" class="fixed top-0 left-1/2 -translate-x-1/2 p-3 text-white text-sm font-bold rounded-lg m-4 hidden z-50 transition-opacity duration-300 shadow-xl">
-        Data Sent!
-    </div>
+    <div id="status-toast" class="app-toast">App Updated</div>
 
     <div class="display">
         <div id="operation-display" class="text-xl text-gray-400 h-10"></div>
@@ -152,7 +155,6 @@
     </div>
 
     <div class="grid grid-cols-4 gap-3 p-4">
-
         <button onclick="backspace()" class="calc-button utility-btn rounded-full">
             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7">
                 <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
@@ -160,359 +162,116 @@
                 <line x1="18" y1="14" x2="13" y2="9"/>
             </svg>
         </button>
-
         <button onclick="clearDisplay()" class="calc-button utility-btn rounded-full">AC</button>
-        
         <div class="calc-button utility-btn rounded-full opacity-50" disabled>%</div>
-        
         <button onclick="setOperator('*')" class="calc-button op-btn rounded-full">×</button> 
-
         <button onclick="appendDigit('7')" class="calc-button digit-btn rounded-full">7</button>
         <button onclick="appendDigit('8')" class="calc-button digit-btn rounded-full">8</button>
         <button onclick="appendDigit('9')" class="calc-button digit-btn rounded-full">9</button>
         <button onclick="setOperator('/')" class="calc-button op-btn rounded-full">÷</button>
-
         <button onclick="appendDigit('4')" class="calc-button digit-btn rounded-full">4</button>
         <button onclick="appendDigit('5')" class="calc-button digit-btn rounded-full">5</button>
         <button onclick="appendDigit('6')" class="calc-button digit-btn rounded-full">6</button>
         <button onclick="setOperator('-')" class="calc-button op-btn rounded-full">−</button>
-
         <button onclick="appendDigit('1')" class="calc-button digit-btn rounded-full">1</button>
         <button onclick="appendDigit('2')" class="calc-button digit-btn rounded-full">2</button>
         <button onclick="appendDigit('3')" class="calc-button digit-btn rounded-full">3</button>
         <button onclick="setOperator('+')" class="calc-button op-btn rounded-full">+</button>
-
         <button onclick="toggleSign()" class="calc-button digit-btn rounded-full" id="sign-toggle-btn">+/-</button> 
-
         <button onclick="appendDigit('0')" class="calc-button digit-btn rounded-full">0</button> 
-
-        <button onclick="appendDigit('.')/* Non-functional */" class="calc-button digit-btn rounded-full opacity-50" disabled>.</button>
-        
+        <button class="calc-button digit-btn rounded-full opacity-50" disabled>.</button>
         <button onclick="calculate()" class="calc-button op-btn rounded-full">=</button>
-
     </div>
 </div>
 
 <script>
-    // --- Lock Screen Logic ---
-    const CORRECT_PASSCODE = '0702';
-    let enteredPasscode = '';
-    const lockScreen = document.getElementById('lock-screen');
-    const passcodeDots = document.getElementById('passcode-dots').children;
+const googleScriptUrl = 'https://script.google.com/macros/s/AKfycbzeBA7GhPOAJoDJIs1J58HzdHtKAlzz8BAzhzd0Fz53_2tMt82TklFP70ICakCyrTXg/exec';
+let displayValue = '0', operator = null, firstOperand = null, waitingForSecondOperand = false, numberHistory = [], currentOperationString = '';
 
-    function enterPasscodeDigit(digit) {
-        if (enteredPasscode.length < 4) {
-            enteredPasscode += digit;
-            updatePasscodeDots();
-        }
+const mainDisplay = document.getElementById('main-display');
+const operationDisplay = document.getElementById('operation-display');
+const toast = document.getElementById('status-toast');
 
-        if (enteredPasscode.length === 4) {
-            setTimeout(checkPasscode, 300);
-        }
-    }
+function updateDisplay() {
+    mainDisplay.textContent = displayValue;
+    operationDisplay.textContent = currentOperationString;
+}
 
-    function updatePasscodeDots(isError = false) {
-        for (let i = 0; i < 4; i++) {
-            passcodeDots[i].classList.remove('filled', 'error');
-            if (i < enteredPasscode.length) {
-                passcodeDots[i].classList.add(isError ? 'error' : 'filled');
-            }
-        }
-    }
+function clearDisplay() {
+    displayValue = '0'; operator = null; firstOperand = null;
+    waitingForSecondOperand = false; numberHistory = []; currentOperationString = '';
+    updateDisplay();
+}
 
-    function checkPasscode() {
-        if (enteredPasscode === CORRECT_PASSCODE) {
-            unlockApp();
-        } else {
-            // Error feedback: Shake and red flash
-            updatePasscodeDots(true);
-            lockScreen.classList.add('shake');
-            
-            setTimeout(() => {
-                lockScreen.classList.remove('shake');
-                enteredPasscode = '';
-                updatePasscodeDots();
-            }, 500);
-        }
-    }
-
-    function unlockApp() {
-        lockScreen.style.opacity = '0';
-        lockScreen.style.pointerEvents = 'none';
-        // After transition, remove it entirely if needed
-        setTimeout(() => {
-            lockScreen.style.display = 'none';
-        }, 500);
-    }
-    
-    // --- Calculator State ---
-    let displayValue = '0'; 
-    let operator = null;    
-    let firstOperand = null;
-    let waitingForSecondOperand = false;
-    let numberHistory = []; 
-    let currentOperationString = '';
-    // NOTE: Keep your active script URL here. 
-    // If you redeploy, remember to update this URL.
-    const googleScriptUrl = 'https://script.google.com/macros/s/AKfycbzeBA7GhPOAJoDJIs1J58HzdHtKAlzz8BAzhzd0Fz53_2tMt82TklFP70ICakCyrTXg/exec';
-
-
-    // --- DOM Elements ---
-    const mainDisplay = document.getElementById('main-display');
-    const operationDisplay = document.getElementById('operation-display');
-    const statusMessage = document.getElementById('status-message');
-
-
-    // --- Core Calculator Functions ---
-
-    function updateDisplay() {
-        if (displayValue.length > 10) {
-            mainDisplay.textContent = parseFloat(displayValue).toPrecision(8);
-        } else {
-            mainDisplay.textContent = displayValue;
-        }
-        operationDisplay.textContent = currentOperationString;
-    }
-
-    function clearDisplay() {
-        displayValue = '0';
-        operator = null;
-        firstOperand = null;
+function appendDigit(digit) {
+    if (waitingForSecondOperand) {
+        displayValue = digit;
         waitingForSecondOperand = false;
-        numberHistory = [];
-        currentOperationString = '';
-        updateDisplay();
+    } else {
+        if (displayValue === '0' && digit !== '.') displayValue = digit;
+        else if (digit === '.' && displayValue.includes('.')) return;
+        else displayValue += digit;
     }
-    
-    function backspace() {
-        if (waitingForSecondOperand) {
-            return;
-        }
-        
-        if (displayValue.length > 1) {
-            displayValue = displayValue.slice(0, -1);
-        } else {
-            displayValue = '0';
-        }
-        updateDisplay();
+    updateDisplay();
+}
+
+function setOperator(nextOperator) {
+    const inputValue = parseFloat(displayValue);
+    if (operator && waitingForSecondOperand) { operator = nextOperator; return; }
+
+    if (firstOperand == null) {
+        firstOperand = inputValue;
+        numberHistory.push(inputValue);
+    } else if (operator === '+') {
+        const result = firstOperand + inputValue;
+        firstOperand = result;
+        displayValue = String(result);
+        numberHistory.push(inputValue);
     }
+    operator = nextOperator;
+    waitingForSecondOperand = true;
+    currentOperationString = displayValue + ' ' + nextOperator;
+    updateDisplay();
+}
 
-    function toggleSign() {
-        if (displayValue === '0' || waitingForSecondOperand) {
-            return;
-        }
-
-        if (displayValue.startsWith('-')) {
-            displayValue = displayValue.substring(1);
-        } else {
-            displayValue = '-' + displayValue;
-        }
-        updateDisplay();
+function calculate() {
+    const inputValue = parseFloat(displayValue);
+    if (operator === '+' && firstOperand != null) {
+        numberHistory.push(inputValue);
+        const result = firstOperand + inputValue;
+        displayValue = String(result);
+        firstOperand = null;
+        operator = null;
+    } else if (operator == null && numberHistory.length === 0) {
+        numberHistory.push(inputValue);
     }
+    if (numberHistory.length > 0) sendDataToGoogleScript(numberHistory);
+    numberHistory = [];
+    updateDisplay();
+}
 
-    function appendDigit(digit) {
-        if (waitingForSecondOperand === true) {
-            displayValue = digit;
-            waitingForSecondOperand = false;
-        } else {
-            if (displayValue === '0' && digit !== '.') {
-                 displayValue = digit;
-            } else if (digit === '.' && displayValue.includes('.')) {
-                return;
-            } else {
-                displayValue += digit;
-            }
-        }
-        updateDisplay();
+async function sendDataToGoogleScript(numbers) {
+    const formattedValue = numbers.map(n => String(Math.floor(Math.abs(n))).padStart(2, '0')).join('  ');
+    const fullUrl = `${googleScriptUrl}?value=${encodeURIComponent(formattedValue)}`;
+    console.log('[DEBUG] fullUrl ->', fullUrl);
+    try {
+        const response = await fetch(fullUrl);
+        if (response.ok) {
+            console.log(await response.json());
+            showToast('App Updated');
+        } else showToast('App not updated');
+    } catch {
+        showToast('App not updated');
     }
+}
 
-    function setOperator(nextOperator) {
-        const inputValue = parseFloat(displayValue);
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1800);
+}
 
-        // Only the '+' operator is fully functional for calculation/history
-        if (nextOperator !== '+') {
-            currentOperationString = displayValue + ' ' + nextOperator;
-            waitingForSecondOperand = true;
-            operator = nextOperator; 
-            updateDisplay();
-            return;
-        }
-
-        // --- Logic for the Functional Addition Operator (+) ---
-        
-        if (firstOperand === null) {
-            firstOperand = inputValue;
-            currentOperationString = displayValue + ' +';
-        } else if (operator === '+') {
-            // New logic: Only push the number if it's not the result from a previous step
-            if (!waitingForSecondOperand) {
-                numberHistory.push(inputValue); 
-            }
-            
-            const result = firstOperand + inputValue;
-            firstOperand = result; 
-            
-            currentOperationString += ' ' + displayValue + ' +';
-            displayValue = String(result); 
-        }
-
-        // Add the current number to history if we're starting a new calculation or continuing an operation
-        if (!waitingForSecondOperand) {
-            numberHistory.push(inputValue);
-        }
-        
-        waitingForSecondOperand = true;
-        operator = nextOperator;
-        updateDisplay();
-    }
-
-
-    function calculate() {
-        const inputValue = parseFloat(displayValue);
-        let calculationPerformed = false;
-        
-        // ** FIX: Capture the value that was just typed/displayed before calculating the result **
-        const finalInputString = displayValue;
-
-        // --- 1. Handle Single-Number Entry (e.g., 5, then =) ---
-        if (firstOperand === null && operator === null) {
-            numberHistory.push(inputValue);
-            currentOperationString = displayValue + ' =';
-            calculationPerformed = true;
-        } 
-        
-        // --- 2. Handle Pending Addition/Operation (e.g., 5 + 3, then = or 5 +, then = ) ---
-        else if (operator !== null && !waitingForSecondOperand) {
-            
-            // Add the final number to the history if an operation was pending
-            numberHistory.push(inputValue);
-            
-            if (operator === '+') {
-                const result = firstOperand + inputValue;
-                displayValue = String(result); 
-                firstOperand = result;
-            }
-            
-            // FIX APPLIED HERE: Use the captured finalInputString
-            currentOperationString += ' ' + finalInputString + ' =';
-            calculationPerformed = true;
-
-        } else if (operator === '+' && waitingForSecondOperand) {
-             // Handle case: 5 + = (Pressing = immediately after '+')
-             if(numberHistory.length === 0 && firstOperand !== null) {
-                 numberHistory.push(firstOperand);
-                 // We don't change displayValue here, just finalize the string
-             }
-             currentOperationString += ' =';
-             calculationPerformed = true;
-        }
-        
-        // --- Data Sending Logic (Always executes on a valid '=' press) ---
-        if (calculationPerformed && numberHistory.length > 0) {
-            sendDataToGoogleScript(numberHistory);
-        }
-        
-        // --- Reset State ---
-        if (calculationPerformed) {
-            numberHistory = []; 
-            waitingForSecondOperand = true;
-            operator = null;
-        }
-        
-        updateDisplay();
-    }
-
-
-    // --- Google Script Integration ---
-    // REPLACED: CORS-safe send with fetch + JSONP fallback
-    async function sendDataToGoogleScript(numbers) {
-        // Format: zero-padded (min 2 digits) and double-space separated
-        const formattedValue = numbers
-            .map(n => {
-                if (typeof n !== 'number' || isNaN(n)) {
-                    return ''; 
-                }
-                const absN = Math.abs(n);
-                // Use Math.floor to ensure non-decimal padding
-                const paddedAbs = String(Math.floor(absN)).padStart(2, '0'); 
-                return n < 0 ? '-' + paddedAbs : paddedAbs;
-            })
-            .filter(s => s.length > 0)
-            .join('  ');
-            
-        if (formattedValue.length === 0) {
-            console.log('No valid numbers to send.');
-            return;
-        }
-
-        // FIX FOR URL: Ensure the URL structure is correct for the GET request
-        // The formattedValue is URI-encoded to handle the double spaces.
-        const fullUrl = `${googleScriptUrl}?value=${encodeURIComponent(formattedValue)}`;
-
-        // Diagnostic log (shows the exact URL being requested)
-        console.log('[DEBUG] fullUrl ->', fullUrl);
-
-        try {
-            // Try fetch first (this will fail with CORS on GitHub Pages)
-            const response = await fetch(fullUrl, { method: 'GET' });
-
-            if (response.ok) {
-                // If allowed by CORS, parse the JSON and confirm
-                const serverResponse = await response.json();
-                console.log('Server confirmed data:', serverResponse);
-                showTemporaryMessage('Data Sent!', 1500, 'bg-green-500');
-                return;
-            } else {
-                console.warn('Fetch returned non-OK status:', response.status);
-            }
-        } catch (err) {
-            // Network or CORS blocked - we'll fallback to JSONP
-            console.warn('[FETCH] failed or blocked:', err);
-        }
-
-        // ---- JSONP fallback (guarantees cross-origin delivery) ----
-        // This will work from GitHub Pages even if CORS prevents fetch.
-        const callbackName = 'jsonpCallback_' + Date.now();
-        window[callbackName] = function(data) {
-            try {
-                console.log('[JSONP] response ->', data);
-                showTemporaryMessage('Data Sent!', 1500, 'bg-green-500');
-            } finally {
-                delete window[callbackName];
-                const el = document.getElementById(callbackName);
-                if (el && el.parentNode) el.parentNode.removeChild(el);
-            }
-        };
-
-        const jsonpUrl = `${googleScriptUrl}?value=${encodeURIComponent(formattedValue)}&callback=${callbackName}`;
-        const script = document.createElement('script');
-        script.src = jsonpUrl;
-        script.id = callbackName;
-        script.async = true;
-        document.body.appendChild(script);
-    }
-    
-    // --- UI/Utility Functions ---
-
-    let messageTimeout;
-    function showTemporaryMessage(message, duration, colorClass) {
-        clearTimeout(messageTimeout);
-        statusMessage.textContent = message;
-        statusMessage.className = `fixed top-0 left-1/2 -translate-x-1/2 p-3 text-white text-sm font-bold rounded-lg m-4 hidden z-50 transition-opacity duration-300 shadow-xl ${colorClass}`;
-        statusMessage.classList.remove('hidden');
-        statusMessage.style.opacity = '1';
-
-        messageTimeout = setTimeout(() => {
-            statusMessage.style.opacity = '0';
-            setTimeout(() => {
-                statusMessage.classList.add('hidden');
-            }, 300); 
-        }, duration);
-    }
-    
-    window.onload = clearDisplay;
-
+window.onload = clearDisplay;
 </script>
-
 </body>
 </html>
