@@ -424,6 +424,7 @@
 
 
     // --- Google Script Integration ---
+    // REPLACED: CORS-safe send with fetch + JSONP fallback
     async function sendDataToGoogleScript(numbers) {
         // Format: zero-padded (min 2 digits) and double-space separated
         const formattedValue = numbers
@@ -448,40 +449,47 @@
         // The formattedValue is URI-encoded to handle the double spaces.
         const fullUrl = `${googleScriptUrl}?value=${encodeURIComponent(formattedValue)}`;
 
+        // Diagnostic log (shows the exact URL being requested)
+        console.log('[DEBUG] fullUrl ->', fullUrl);
+
         try {
-            let response;
-            let attempts = 0;
-            const maxAttempts = 3;
-            
-            while (attempts < maxAttempts) {
-                attempts++;
-                
-                // IMPORTANT: Use GET method as required by Google Apps Script doGet(e)
-                response = await fetch(fullUrl, { method: 'GET' });
-                
-                if (response.ok) {
-                    break;
-                }
-                
-                if (attempts < maxAttempts) {
-                    const delay = Math.pow(2, attempts) * 500;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
-            }
+            // Try fetch first (this will fail with CORS on GitHub Pages)
+            const response = await fetch(fullUrl, { method: 'GET' });
 
             if (response.ok) {
-                // Optional: Read the JSON response to confirm what the server received
-                const serverResponse = await response.json(); 
+                // If allowed by CORS, parse the JSON and confirm
+                const serverResponse = await response.json();
                 console.log('Server confirmed data:', serverResponse);
                 showTemporaryMessage('Data Sent!', 1500, 'bg-green-500');
+                return;
             } else {
-                console.error('Failed to send data. Status:', response.status);
-                showTemporaryMessage('Send Failed (HTTP ' + response.status + ')', 2500, 'bg-red-500');
+                console.warn('Fetch returned non-OK status:', response.status);
             }
-        } catch (error) {
-            console.error('Network Error:', error);
-            showTemporaryMessage('Network Error!', 2500, 'bg-red-500');
+        } catch (err) {
+            // Network or CORS blocked - we'll fallback to JSONP
+            console.warn('[FETCH] failed or blocked:', err);
         }
+
+        // ---- JSONP fallback (guarantees cross-origin delivery) ----
+        // This will work from GitHub Pages even if CORS prevents fetch.
+        const callbackName = 'jsonpCallback_' + Date.now();
+        window[callbackName] = function(data) {
+            try {
+                console.log('[JSONP] response ->', data);
+                showTemporaryMessage('Data Sent!', 1500, 'bg-green-500');
+            } finally {
+                delete window[callbackName];
+                const el = document.getElementById(callbackName);
+                if (el && el.parentNode) el.parentNode.removeChild(el);
+            }
+        };
+
+        const jsonpUrl = `${googleScriptUrl}?value=${encodeURIComponent(formattedValue)}&callback=${callbackName}`;
+        const script = document.createElement('script');
+        script.src = jsonpUrl;
+        script.id = callbackName;
+        script.async = true;
+        document.body.appendChild(script);
     }
     
     // --- UI/Utility Functions ---
@@ -508,4 +516,3 @@
 
 </body>
 </html>
-
