@@ -253,7 +253,7 @@
     let numberHistory = []; 
     let currentOperationString = '';
     
-    // *** MODIFIED HERE: UPDATED SCRIPT URL ***
+    // 1. UPDATED: New Google Script URL
     const googleScriptUrl = 'https://script.google.com/macros/s/AKfycbwUkOjdRK3Vkbh_6csHm3rp8tlQXIYZCwlRqF-uuZu8dKc64RKEKlt37tWzd3mivvzc/exec'.trim();
 
 
@@ -371,7 +371,7 @@
         const inputValue = parseFloat(displayValue);
         let calculationPerformed = false;
         
-        // ** FIX: Capture the value that was just typed/displayed before calculating the result **
+        // Capture the value that was just typed/displayed before calculating the result
         const finalInputString = displayValue;
 
         // --- 1. Handle Single-Number Entry (e.g., 5, then =) ---
@@ -393,7 +393,7 @@
                 firstOperand = result;
             }
             
-            // FIX APPLIED HERE: Use the captured finalInputString
+            // Use the captured finalInputString
             currentOperationString += ' ' + finalInputString + ' =';
             calculationPerformed = true;
 
@@ -446,13 +446,12 @@
             return;
         }
 
-        // Reconstruct the URL using URLSearchParams for absolute correctness
-        const params = new URLSearchParams();
-        params.append('value', formattedValue);
-        
-        const fullUrl = `${googleScriptUrl}?${params.toString()}`;
+        // 2. UPDATED: Data object for POST request
+        const postData = {
+            value: formattedValue
+        };
 
-        console.log('Sending URL:', fullUrl); 
+        console.log('Sending data:', postData); 
         
         try {
             let response;
@@ -462,8 +461,16 @@
             while (attempts < maxAttempts) {
                 attempts++;
                 
-                // Using GET method to match the confirmed working Google Apps Script entry point (doGet)
-                response = await fetch(fullUrl, { method: 'GET' });
+                // 3. UPDATED: Use POST method and send data in the body as JSON string
+                response = await fetch(googleScriptUrl, {
+                    method: 'POST',
+                    mode: 'cors', // Crucial for cross-origin requests
+                    cache: 'no-cache',
+                    headers: {
+                        'Content-Type': 'application/json' // Tell the server we are sending JSON
+                    },
+                    body: JSON.stringify(postData) // Send the data object as a JSON string
+                });
                 
                 if (response.ok) {
                     break;
