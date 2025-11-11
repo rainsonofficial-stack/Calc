@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000"> 
-    <meta name="apple-mobile-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="application-name" content="Calculator">
 
     <link rel="manifest" href="manifest.json">
@@ -18,14 +18,57 @@
         /* Custom styles for a dark, app-like calculator look */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #000000; /* True Black Background */
+            /* body background will be set by JS/CSS class */
             display: flex;
             justify-content: center;
             align-items: flex-end; /* Align to bottom for typical calculator placement */
             min-height: 100vh;
             margin: 0;
             position: relative; /* For lock screen positioning */
+            transition: background-color 0.3s ease;
         }
+        
+        /* --- THEME DEFINITIONS --- */
+
+        /* Default Theme (Original Dark) */
+        .theme-default {
+            background-color: #000000;
+        }
+        .theme-default .display { color: white; }
+        .theme-default .digit-btn { background-color: #374151; color: white; }
+        .theme-default .digit-btn:active { background-color: #4b5563; }
+        .theme-default .op-btn { background-color: #f97316; color: white; }
+        .theme-default .op-btn:active { background-color: #ea580c; }
+        .theme-default .utility-btn { background-color: #9ca3af; color: #1f2937; }
+        .theme-default .utility-btn:active { background-color: #6b7280; }
+        .theme-default #lock-screen { background-color: #000000; }
+        .theme-default .lock-keypad button { background-color: #374151; color: white; }
+        .theme-default .dot { background-color: #374151; }
+
+        /* Second Theme (Spotify Dark Green) */
+        .theme-second {
+            background-color: #121212; /* Very dark grey/black */
+        }
+        .theme-second .display { color: white; }
+        /* Number Buttons (0-9, ., +/-) */
+        .theme-second .digit-btn { background-color: #1C1C1C; color: #FFFFFF; }
+        .theme-second .digit-btn:active { background-color: #383838; }
+        /* Function Buttons (C, (), %) */
+        .theme-second .utility-btn, .theme-second .function-btn { background-color: #5A5A5A; color: #FFFFFF; }
+        .theme-second .utility-btn:active, .theme-second .function-btn:active { background-color: #727272; }
+        /* Operators (÷, ×, −, +) */
+        .theme-second .op-btn { background-color: #5A5A5A; color: #000000; }
+        .theme-second .op-btn:active { background-color: #727272; }
+        /* Equal (=) - Unique Green */
+        .theme-second #equals-btn { background-color: #1DB954; color: #FFFFFF; }
+        .theme-second #equals-btn:active { background-color: #158b3f; }
+
+        .theme-second #lock-screen { background-color: #121212; }
+        .theme-second .lock-keypad button { background-color: #1C1C1C; color: white; }
+        .theme-second .dot { background-color: #333333; }
+
+
+        /* --- COMMON STYLES --- */
         #calculator {
             width: 100%;
             max-width: 400px;
@@ -36,11 +79,11 @@
             min-height: 150px;
             padding: 1.5rem 1rem;
             text-align: right;
-            color: white;
             overflow-x: auto;
             white-space: nowrap;
             -ms-overflow-style: none;
             scrollbar-width: none;
+            transition: color 0.3s ease;
         }
         .display::-webkit-scrollbar {
             display: none;
@@ -53,19 +96,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: background-color 0.1s;
+            transition: background-color 0.1s, color 0.1s;
             cursor: pointer;
             user-select: none;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-
-        /* Color definitions */
-        .digit-btn { background-color: #374151; color: white; }
-        .digit-btn:active { background-color: #4b5563; }
-        .op-btn { background-color: #f97316; color: white; }
-        .op-btn:active { background-color: #ea580c; }
-        .utility-btn { background-color: #9ca3af; color: #1f2937; }
-        .utility-btn:active { background-color: #6b7280; }
 
         /* Style adjustment for the text-based +/- button */
         #sign-toggle-btn {
@@ -74,25 +109,21 @@
 
         /* Lock Screen Styles */
         #lock-screen {
-            background-color: #000000;
             transition: opacity 0.5s ease-out;
             pointer-events: auto; /* Ensure it blocks clicks */
         }
         .dot {
             width: 15px;
             height: 15px;
-            background-color: #374151;
             transition: background-color 0.2s, transform 0.1s;
         }
         .dot.filled {
-            background-color: white;
+            background-color: white !important; /* Force white for filled dot */
         }
         .dot.error {
-            background-color: #ef4444;
+            background-color: #ef4444 !important; /* Force red for error dot */
         }
         .lock-keypad button {
-            background-color: #374151;
-            color: white;
             font-size: 2rem;
             width: 80px;
             height: 80px;
@@ -135,35 +166,8 @@
         }
 
     </style>
-      <!-- 👇 Add Samsung Theme CSS right below -->
-  <style>
-    /* --- Samsung Theme --- */
-    #calculator.theme-samsung {
-      background-color: #000000;
-    }
-    #calculator.theme-samsung .display {
-      color: #ffffff;
-    }
-    #calculator.theme-samsung .digit-btn {
-      background-color: #1c1c1c;
-      color: #ffffff;
-    }
-    #calculator.theme-samsung .op-btn {
-      background-color: #a0a0a0;
-      color: #000000;
-    }
-    #calculator.theme-samsung .utility-btn {
-      background-color: #2b2b2b;
-      color: #ffffff;
-    }
-    #calculator.theme-samsung .calc-button:active {
-      opacity: 0.7;
-    }
-  </style>
 </head>
-<body>
-
-<div id="lock-screen" class="fixed inset-0 z-50 flex flex-col justify-center items-center p-8">
+<body class="theme-default"> <div id="lock-screen" class="fixed inset-0 z-50 flex flex-col justify-center items-center p-8">
     <div class="flex flex-col items-center">
         <h1 class="text-3xl text-white font-light mb-4 mt-16">Enter Passcode</h1>
         
@@ -213,7 +217,7 @@
 
         <button onclick="clearDisplay()" class="calc-button utility-btn rounded-full">AC</button>
         
-        <div class="calc-button utility-btn rounded-full opacity-50" disabled>%</div>
+        <button id="percent-btn" class="calc-button utility-btn rounded-full">%</button>
         
         <button onclick="setOperator('*')" class="calc-button op-btn rounded-full">×</button> 
 
@@ -238,7 +242,7 @@
 
         <button onclick="appendDigit('.')/* Non-functional */" class="calc-button digit-btn rounded-full opacity-50" disabled>.</button>
         
-        <button onclick="calculate()" class="calc-button op-btn rounded-full">=</button>
+        <button onclick="calculate()" class="calc-button op-btn rounded-full" id="equals-btn">=</button>
 
     </div>
 </div>
@@ -308,10 +312,67 @@
 
 
     // --- DOM Elements ---
+    const body = document.body; // Added reference to body
     const mainDisplay = document.getElementById('main-display');
     const operationDisplay = document.getElementById('operation-display');
     const statusMessage = document.getElementById('status-message');
+    const percentButton = document.getElementById('percent-btn'); // New reference
 
+    // --- Theme Logic ---
+    let currentTheme = 'theme-default';
+    const THEME_KEY = 'calculatorTheme';
+    const BUTTON_TYPES = ['digit-btn', 'utility-btn', 'op-btn', 'function-btn']; // Added function-btn for clarity
+
+    // Function to apply the theme class to the body
+    function applyTheme(themeName) {
+        body.classList.remove('theme-default', 'theme-second');
+        body.classList.add(themeName);
+        currentTheme = themeName;
+        localStorage.setItem(THEME_KEY, themeName);
+        
+        // Update the status message for visual confirmation
+        const themeMessage = themeName === 'theme-default' ? 'Default Theme' : 'Second Theme';
+        showTemporaryMessage(themeMessage, 1000);
+    }
+
+    // Function to toggle between themes
+    function toggleTheme() {
+        if (currentTheme === 'theme-default') {
+            applyTheme('theme-second');
+        } else {
+            applyTheme('theme-default');
+        }
+    }
+
+    // Double-tap implementation
+    let lastTap = 0;
+    percentButton.addEventListener('click', function(event) {
+        const now = Date.now();
+        const DBL_TAP_THRESHOLD = 300; // ms
+
+        // Perform the original percentage logic if needed (currently disabled/omitted)
+        // Note: The original percent button was wrapped in a div and had an opacity of 50.
+        // I have made it a standard button with an ID to attach the event.
+        // The original code had the button disabled, this re-enables it for the theme toggle.
+        
+        if (now - lastTap < DBL_TAP_THRESHOLD) {
+            // Double-tap detected
+            toggleTheme();
+            lastTap = 0; // Reset
+        } else {
+            // First tap
+            lastTap = now;
+        }
+
+        // Prevent default action if one was defined (though not strictly necessary for a simple button)
+        event.preventDefault();
+    });
+
+    // Load theme from localStorage on start
+    function loadTheme() {
+        const savedTheme = localStorage.getItem(THEME_KEY);
+        applyTheme(savedTheme || 'theme-default'); // Default to 'theme-default'
+    }
 
     // --- Core Calculator Functions ---
 
@@ -403,10 +464,10 @@
             }
             
             const result = firstOperand + inputValue;
-            firstOperand = result; 
+            firstOperand = result;  
             
             currentOperationString += ' ' + displayValue + ' +';
-            displayValue = String(result); 
+            displayValue = String(result);  
         }
 
         // Add the current number to history if we're starting a new calculation or continuing an operation
@@ -448,7 +509,7 @@
             
             if (operator === '+') {
                 const result = firstOperand + inputValue;
-                displayValue = String(result); 
+                displayValue = String(result);  
                 firstOperand = result;
             }
             
@@ -489,11 +550,11 @@
         const formattedValue = numbers
             .map(n => {
                 if (typeof n !== 'number' || isNaN(n)) {
-                    return ''; 
+                    return '';  
                 }
                 const absN = Math.abs(n);
                 // Use Math.floor to ensure non-decimal padding
-                const paddedAbs = String(Math.floor(absN)).padStart(2, '0'); 
+                const paddedAbs = String(Math.floor(absN)).padStart(2, '0');  
                 return n < 0 ? '-' + paddedAbs : paddedAbs;
             })
             .filter(s => s.length > 0)
@@ -585,76 +646,12 @@
         }, duration);
     }
     
-    window.onload = clearDisplay;
+    window.onload = function() {
+        loadTheme();
+        clearDisplay();
+    };
 
 </script>
-<!-- 👇 ADD THIS at the very end, just before </body> -->
-<style>
-/* --- Samsung Theme --- */
-#calculator.theme-samsung {
-  background-color: #000000;
-}
-#calculator.theme-samsung .display {
-  color: #ffffff;
-}
-#calculator.theme-samsung .digit-btn {
-  background-color: #1c1c1c;
-  color: #ffffff;
-}
-#calculator.theme-samsung .op-btn {
-  background-color: #a0a0a0;
-  color: #000000;
-}
-#calculator.theme-samsung .utility-btn {
-  background-color: #2b2b2b;
-  color: #ffffff;
-}
-#calculator.theme-samsung .calc-button:active {
-  opacity: 0.7;
-}
-</style>
 
-<script>
-// --- Samsung Theme Toggle + Memory ---
-document.addEventListener("DOMContentLoaded", () => {
-  const calcContainer = document.getElementById("calculator");
-  const percentBtn = document.querySelector(".calc-button.utility-btn:nth-child(3)");
-
-  // Load theme from memory
-  const savedTheme = localStorage.getItem("calcTheme");
-  if (savedTheme === "samsung") {
-    calcContainer.classList.add("theme-samsung");
-  }
-
-  // Double-tap toggle
-  percentBtn.addEventListener("dblclick", () => {
-    const samsungActive = calcContainer.classList.toggle("theme-samsung");
-    localStorage.setItem("calcTheme", samsungActive ? "samsung" : "ios");
-  });
-});
-</script>
- <!-- existing scripts -->
-  <script src="main.js"></script>
-
-  <!-- 👇 Add this right before </body> -->
-  <script>
-  // --- Samsung Theme Toggle + Memory ---
-  document.addEventListener("DOMContentLoaded", () => {
-    const calcContainer = document.getElementById("calculator");
-    const percentBtn = document.querySelector(".calc-button.utility-btn:nth-child(3)");
-
-    // Load theme from memory
-    const savedTheme = localStorage.getItem("calcTheme");
-    if (savedTheme === "samsung") {
-      calcContainer.classList.add("theme-samsung");
-    }
-
-    // Double-tap toggle
-    percentBtn.addEventListener("dblclick", () => {
-      const samsungActive = calcContainer.classList.toggle("theme-samsung");
-      localStorage.setItem("calcTheme", samsungActive ? "samsung" : "ios");
-    });
-  });
-  </script>
 </body>
 </html>
