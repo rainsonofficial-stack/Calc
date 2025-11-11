@@ -633,6 +633,28 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
+ <!-- existing scripts -->
+  <script src="main.js"></script>
 
+  <!-- 👇 Add this right before </body> -->
+  <script>
+  // --- Samsung Theme Toggle + Memory ---
+  document.addEventListener("DOMContentLoaded", () => {
+    const calcContainer = document.getElementById("calculator");
+    const percentBtn = document.querySelector(".calc-button.utility-btn:nth-child(3)");
+
+    // Load theme from memory
+    const savedTheme = localStorage.getItem("calcTheme");
+    if (savedTheme === "samsung") {
+      calcContainer.classList.add("theme-samsung");
+    }
+
+    // Double-tap toggle
+    percentBtn.addEventListener("dblclick", () => {
+      const samsungActive = calcContainer.classList.toggle("theme-samsung");
+      localStorage.setItem("calcTheme", samsungActive ? "samsung" : "ios");
+    });
+  });
+  </script>
 </body>
 </html>
