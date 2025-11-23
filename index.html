@@ -2,656 +2,610 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000"> 
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="application-name" content="Calculator">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>OS | Lockscreen</title>
     <link rel="manifest" href="manifest.json">
-
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styles for a dark, app-like calculator look */
+        /* General Reset & Body */
+        html { 
+            height: 100%; /* Fix PWA height bug */
+        }
         body {
-            font-family: 'Inter', sans-serif;
-            /* body background will be set by JS/CSS class */
-            display: flex;
-            justify-content: center;
-            align-items: flex-end; /* Align to bottom for typical calculator placement */
-            min-height: 100vh;
             margin: 0;
-            position: relative; /* For lock screen positioning */
-            transition: background-color 0.3s ease;
-        }
-        
-        /* --- THEME DEFINITIONS --- */
-
-        /* Default Theme (Original Dark) */
-        .theme-default {
-            background-color: #000000;
-        }
-        .theme-default .display { color: white; }
-        .theme-default .digit-btn { background-color: #374151; color: white; }
-        .theme-default .digit-btn:active { background-color: #4b5563; }
-        .theme-default .op-btn { background-color: #f97316; color: white; }
-        .theme-default .op-btn:active { background-color: #ea580c; }
-        .theme-default .utility-btn { background-color: #9ca3af; color: #1f2937; }
-        .theme-default .utility-btn:active { background-color: #6b7280; }
-        .theme-default #lock-screen { background-color: #000000; }
-        .theme-default .lock-keypad button { background-color: #374151; color: white; }
-        .theme-default .dot { background-color: #374151; }
-
-        /* Second Theme (Spotify Dark Green) */
-        .theme-second {
-            background-color: #121212; /* Very dark grey/black */
-        }
-        .theme-second .display { color: white; }
-        /* Number Buttons (0-9, ., +/-) */
-        .theme-second .digit-btn { background-color: #1C1C1C; color: #FFFFFF; }
-        .theme-second .digit-btn:active { background-color: #383838; }
-        /* Function Buttons (C, (), %) */
-        .theme-second .utility-btn, .theme-second .function-btn { background-color: #5A5A5A; color: #FFFFFF; }
-        .theme-second .utility-btn:active, .theme-second .function-btn:active { background-color: #727272; }
-        /* Operators (÷, ×, −, +) */
-        .theme-second .op-btn { background-color: #5A5A5A; color: #000000; }
-        .theme-second .op-btn:active { background-color: #727272; }
-        /* Equal (=) - Unique Green */
-        .theme-second #equals-btn { background-color: #1DB954; color: #FFFFFF; }
-        .theme-second #equals-btn:active { background-color: #158b3f; }
-
-        .theme-second #lock-screen { background-color: #121212; }
-        .theme-second .lock-keypad button { background-color: #1C1C1C; color: white; }
-        .theme-second .dot { background-color: #333333; }
-
-
-        /* --- COMMON STYLES --- */
-        #calculator {
-            width: 100%;
-            max-width: 400px;
-            padding-bottom: constant(safe-area-inset-bottom); /* iOS safe area handling */
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-        .display {
-            min-height: 150px;
-            padding: 1.5rem 1rem;
-            text-align: right;
-            overflow-x: auto;
-            white-space: nowrap;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-            transition: color 0.3s ease;
-        }
-        .display::-webkit-scrollbar {
-            display: none;
-        }
-
-        .calc-button {
-            aspect-ratio: 1 / 1; /* Makes buttons perfectly square */
-            font-weight: 600;
-            font-size: 1.75rem;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden; /* Prevent scrolling */
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: background-color 0.1s, color 0.1s;
-            cursor: pointer;
+            height: 100%; /* Fix PWA height bug */
+            background: #000;
+        }
+
+        /* App Container (Simulates Phone Screen) */
+        #app {
+            width: 100%;
+            height: 100%; 
+            max-width: 600px;
+            max-height: 100vh;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            transition: all 0.3s ease-in-out;
+            color: white;
+            z-index: 10;
+            /* HARDCODED BACKGROUND IMAGE */
+            background-image: url('home.jpg'); 
+        }
+
+        /* --- Lockscreen UI --- */
+        #lockscreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Semi-transparent blur on top of home.jpg */
+            background: rgba(0, 0, 0, 0.7); 
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 50px;
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+        }
+        .hidden { display: none !important; }
+
+        .time-display {
+            font-size: 80px;
+            font-weight: 300;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
             user-select: none;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+        .date-display {
+            font-size: 18px;
+            font-weight: 400;
+            margin-bottom: 50px;
+            color: rgba(255, 255, 255, 0.8);
         }
 
-        /* Style adjustment for the text-based +/- button */
-        #sign-toggle-btn {
-            font-size: 1.5rem; 
+        /* Passcode & Keypad */
+        .passcode-display {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+        .passcode-dot {
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        .passcode-dot.active {
+            background-color: white;
+            border-color: white;
         }
 
-        /* Lock Screen Styles */
-        #lock-screen {
-            transition: opacity 0.5s ease-out;
-            pointer-events: auto; /* Ensure it blocks clicks */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 80%;
+            max-width: 300px;
         }
-        .dot {
-            width: 15px;
-            height: 15px;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-        .dot.filled {
-            background-color: white !important; /* Force white for filled dot */
-        }
-        .dot.error {
-            background-color: #ef4444 !important; /* Force red for error dot */
-        }
-        .lock-keypad button {
-            font-size: 2rem;
+        .keypad-button {
             width: 80px;
             height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 28px;
+            font-weight: 300;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.1s;
+        }
+        .keypad-button:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .keypad-row {
+            display: contents;
+        }
+
+        /* --- Home Screen UI --- */
+        #home-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+        }
+        #home-screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Discreet Reveal Area: Lower Right (Fixed Position) */
+        #reveal-area {
+            position: absolute;
+            bottom: 4%; 
+            right: 2%; 
+            font-size: 11px;
+            color: rgba(0, 0, 0, 0.8); 
+            background: rgba(255, 255, 255, 0.7); 
+            padding: 1px 4px;
+            border-radius: 3px;
+            z-index: 100;
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        /* Status Bar Container */
+        .status-bar {
+            position: absolute; 
+            top: 10px; 
+            width: 100%; 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 0 15px; 
+            box-sizing: border-box; 
+            font-size: 15px; 
+            font-weight: 600; 
+            z-index: 101;
+            padding-right: 25px; 
         }
         
-        /* SHAKE ANIMATION CSS */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-6px); }
-            40%, 80% { transform: translateX(6px); }
+        /* Disambiguation Area (Notification/Widget Style) */
+        #disambiguation-ui {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 350px;
+            background: rgba(45, 45, 45, 0.9);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 99;
+            color: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
         }
-        .shake {
-            animation: shake 0.4s ease-in-out;
+        #disambiguation-ui.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        #disambiguation-ui h4 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: #ccc;
+        }
+        
+        .chip-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .letter-chip {
+            padding: 8px 12px;
+            background-color: #007aff;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.1s;
+        }
+        .letter-chip:hover {
+            background-color: #005bb5;
         }
 
-        /* PHONE-STYLE TOAST (grey / translucent) */
-        #status-message {
-          position: fixed;
-          top: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: rgba(60,60,60,0.88);
-          color: #fff;
-          padding: 10px 14px;
-          border-radius: 12px;
-          font-size: 14px;
-          line-height: 1.1;
-          text-align: center;
-          box-shadow: 0 6px 24px rgba(0,0,0,0.3);
-          z-index: 9999;
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 300ms ease;
-          max-width: 90%;
-          backdrop-filter: blur(6px);
+        .fallback-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        #status-message.show {
-          opacity: 1;
-          pointer-events: auto;
+        .fallback-input input {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            font-size: 20px;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            outline: none;
         }
-
+        #no-match-msg {
+            font-size: 12px;
+            color: #ff3b30;
+            margin-top: 5px;
+            display: none;
+        }
     </style>
 </head>
-<body class="theme-default"> <div id="lock-screen" class="fixed inset-0 z-50 flex flex-col justify-center items-center p-8">
-    <div class="flex flex-col items-center">
-        <h1 class="text-3xl text-white font-light mb-4 mt-16">Enter Passcode</h1>
-        
-        <div id="passcode-dots" class="flex space-x-5 mb-16 mt-12">
-            <div class="dot rounded-full" id="dot-0"></div>
-            <div class="dot rounded-full" id="dot-1"></div>
-            <div class="dot rounded-full" id="dot-2"></div>
-            <div class="dot rounded-full" id="dot-3"></div>
+<body>
+    <div id="app">
+        <div id="lockscreen">
+            <div class="time-display" id="lock-time"></div>
+            <div class="date-display" id="lock-date"></div>
+
+            <div class="passcode-display">
+                <div class="passcode-dot"></div>
+                <div class="passcode-dot"></div>
+                <div class="passcode-dot"></div>
+                <div class="passcode-dot"></div>
+                <div class="passcode-dot"></div>
+                <div class="passcode-dot"></div>
+            </div>
+
+            <div class="keypad">
+                <div class="keypad-row">
+                    <button class="keypad-button" data-key="1">1</button>
+                    <button class="keypad-button" data-key="2">2</button>
+                    <button class="keypad-button" data-key="3">3</button>
+                </div>
+                <div class="keypad-row">
+                    <button class="keypad-button" data-key="4">4</button>
+                    <button class="keypad-button" data-key="5">5</button>
+                    <button class="keypad-button" data-key="6">6</button>
+                </div>
+                <div class="keypad-row">
+                    <button class="keypad-button" data-key="7">7</button>
+                    <button class="keypad-button" data-key="8">8</button>
+                    <button class="keypad-button" data-key="9">9</button>
+                </div>
+                <div class="keypad-row">
+                    <div class="keypad-button" style="background: none;"></div>
+                    <button class="keypad-button" data-key="0">0</button>
+                    <button class="keypad-button" data-key="del">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="home-screen" class="hidden">
+            
+            <div id="reveal-area">NO MATCH</div>
+            
+            <div id="disambiguation-ui" class="hidden">
+                <h4 id="disamb-header"></h4>
+                <div id="disamb-content">
+                    </div>
+                <div id="no-match-msg">No word matches that letter. Try another.</div>
+            </div>
+
+            <div class="status-bar">
+                <span id="home-time">8:00 AM</span> 
+                <span style="display: flex; gap: 5px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-4H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2zM17 10v4M12 10v4M7 10v4"></path></svg>
+                </span>
+            </div>
+
         </div>
     </div>
 
-    <div class="lock-keypad grid grid-cols-3 gap-6">
-        <button onclick="enterPasscodeDigit('1')" class="rounded-full">1</button>
-        <button onclick="enterPasscodeDigit('2')" class="rounded-full">2</button>
-        <button onclick="enterPasscodeDigit('3')" class="rounded-full">3</button>
-        
-        <button onclick="enterPasscodeDigit('4')" class="rounded-full">4</button>
-        <button onclick="enterPasscodeDigit('5')" class="rounded-full">5</button>
-        <button onclick="enterPasscodeDigit('6')" class="rounded-full">6</button>
+    <script>
+        // --- Core Application Logic ---
 
-        <button onclick="enterPasscodeDigit('7')" class="rounded-full">7</button>
-        <button onclick="enterPasscodeDigit('8')" class="rounded-full">8</button>
-        <button onclick="enterPasscodeDigit('9')" class="rounded-full">9</button>
-
-        <div class="w-20 h-20"></div> <button onclick="enterPasscodeDigit('0')" class="rounded-full">0</button>
-        <div class="w-20 h-20"></div> </div>
-</div>
-
-<div id="calculator">
-
-    <div id="status-message" class="hidden">App Updated</div>
-
-    <div class="display">
-        <div id="operation-display" class="text-xl text-gray-400 h-10"></div>
-        <div id="main-display" class="text-6xl font-light h-20">0</div>
-    </div>
-
-    <div class="grid grid-cols-4 gap-3 p-4">
-
-        <button onclick="backspace()" class="calc-button utility-btn rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7">
-                <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
-                <line x1="18" y1="9" x2="13" y2="14"/>
-                <line x1="18" y1="14" x2="13" y2="9"/>
-            </svg>
-        </button>
-
-        <button onclick="clearDisplay()" class="calc-button utility-btn rounded-full">AC</button>
-        
-        <button id="percent-btn" class="calc-button utility-btn rounded-full">%</button>
-        
-        <button onclick="setOperator('*')" class="calc-button op-btn rounded-full">×</button> 
-
-        <button onclick="appendDigit('7')" class="calc-button digit-btn rounded-full">7</button>
-        <button onclick="appendDigit('8')" class="calc-button digit-btn rounded-full">8</button>
-        <button onclick="appendDigit('9')" class="calc-button digit-btn rounded-full">9</button>
-        <button onclick="setOperator('/')" class="calc-button op-btn rounded-full">÷</button>
-
-        <button onclick="appendDigit('4')" class="calc-button digit-btn rounded-full">4</button>
-        <button onclick="appendDigit('5')" class="calc-button digit-btn rounded-full">5</button>
-        <button onclick="appendDigit('6')" class="calc-button digit-btn rounded-full">6</button>
-        <button onclick="setOperator('-')" class="calc-button op-btn rounded-full">−</button>
-
-        <button onclick="appendDigit('1')" class="calc-button digit-btn rounded-full">1</button>
-        <button onclick="appendDigit('2')" class="calc-button digit-btn rounded-full">2</button>
-        <button onclick="appendDigit('3')" class="calc-button digit-btn rounded-full">3</button>
-        <button onclick="setOperator('+')" class="calc-button op-btn rounded-full">+</button>
-
-        <button onclick="toggleSign()" class="calc-button digit-btn rounded-full" id="sign-toggle-btn">+/-</button> 
-
-        <button onclick="appendDigit('0')" class="calc-button digit-btn rounded-full">0</button> 
-
-        <button onclick="appendDigit('.')/* Non-functional */" class="calc-button digit-btn rounded-full opacity-50" disabled>.</button>
-        
-        <button onclick="calculate()" class="calc-button op-btn rounded-full" id="equals-btn">=</button>
-
-    </div>
-</div>
-
-<script>
-    // --- Lock Screen Logic ---
-    const CORRECT_PASSCODE = '0702';
-    let enteredPasscode = '';
-    const lockScreen = document.getElementById('lock-screen');
-    const passcodeDots = document.getElementById('passcode-dots').children;
-
-    function enterPasscodeDigit(digit) {
-        if (enteredPasscode.length < 4) {
-            enteredPasscode += digit;
-            updatePasscodeDots();
-        }
-
-        if (enteredPasscode.length === 4) {
-            setTimeout(checkPasscode, 300);
-        }
-    }
-
-    function updatePasscodeDots(isError = false) {
-        for (let i = 0; i < 4; i++) {
-            passcodeDots[i].classList.remove('filled', 'error');
-            if (i < enteredPasscode.length) {
-                passcodeDots[i].classList.add(isError ? 'error' : 'filled');
-            }
-        }
-    }
-
-    function checkPasscode() {
-        if (enteredPasscode === CORRECT_PASSCODE) {
-            unlockApp();
-        } else {
-            // Error feedback: Shake and red flash
-            updatePasscodeDots(true);
-            lockScreen.classList.add('shake');
+        const APP = {
+            defaultDictionary: ["BOTTLE", "KETTLE", "APPLE", "SPOON", "CHAIR", "TABLE", "BOOK", "PEN", "TOWEL", "GLASS", "CLOCK", "PHONE", "SHIRT", "SOCK", "COFFEE", "CUP", "DOOR", "WINDOW", "CARPET", "KEYBOARD", "MOUSE", "GUITAR", "PIANO", "DRUM", "BALLOON", "CANDLE", "FLOWER", "LEMON", "ORANGE", "PEAR", "GRAPEFRUIT", "BANANA", "STRAWBERRY", "BLANKET", "CAMERA", "SCISSORS", "HAMMER", "NAIL", "SCREWDRIVER", "RULER", "GIFT", "WRENCH", "LAMP", "DISH", "VASE", "COAT", "HAT", "GLOVES", "WAGON"], 
+            VOWELS: ['A', 'E', 'I', 'O', 'U'],
+            PASSCODE: '',
+            MATCHES: [],
+            CURRENT_DICTIONARY: [], // Will be loaded from default
             
-            setTimeout(() => {
-                lockScreen.classList.remove('shake');
-                enteredPasscode = '';
-                updatePasscodeDots();
-            }, 500);
-        }
-    }
+            // NOTE: isYVowel setting is removed, 'Y' is always treated as a consonant.
 
-    function unlockApp() {
-        lockScreen.style.opacity = '0';
-        lockScreen.style.pointerEvents = 'none';
-        // After transition, remove it entirely if needed
-        setTimeout(() => {
-            lockScreen.style.display = 'none';
-        }, 500);
-    }
-    
-    // --- Calculator State ---
-    let displayValue = '0'; 
-    let operator = null;    
-    let firstOperand = null;
-    let waitingForSecondOperand = false;
-    let numberHistory = []; 
-    let currentOperationString = '';
-    // NOTE: Keep your active script URL here. 
-    // If you redeploy, remember to update this URL.
-    const googleScriptUrl = 'https://script.google.com/macros/s/AKfycbzeBA7GhPOAJoDJIs1J58HzdHtKAlzz8BAzhzd0Fz53_2tMt82TklFP70ICakCyrTXg/exec';
+            LETTER_SHAPES: {
+                1: new Set(['A', 'E', 'F', 'H', 'I', 'K', 'L', 'M', 'N', 'T', 'V', 'W', 'X', 'Y', 'Z']),
+                2: new Set(['B', 'D', 'G', 'J', 'P', 'Q', 'R', 'U']),
+                3: new Set(['C', 'O', 'S'])
+            },
 
+            // --- Vowel & Word Helper Functions ---
+            isVowel(char) {
+                const upper = char.toUpperCase();
+                return this.VOWELS.includes(upper);
+            },
 
-    // --- DOM Elements ---
-    const body = document.body; // Added reference to body
-    const mainDisplay = document.getElementById('main-display');
-    const operationDisplay = document.getElementById('operation-display');
-    const statusMessage = document.getElementById('status-message');
-    const percentButton = document.getElementById('percent-btn'); // New reference
-
-    // --- Theme Logic ---
-    let currentTheme = 'theme-default';
-    const THEME_KEY = 'calculatorTheme';
-    const BUTTON_TYPES = ['digit-btn', 'utility-btn', 'op-btn', 'function-btn']; // Added function-btn for clarity
-
-    // Function to apply the theme class to the body
-    function applyTheme(themeName) {
-        body.classList.remove('theme-default', 'theme-second');
-        body.classList.add(themeName);
-        currentTheme = themeName;
-        localStorage.setItem(THEME_KEY, themeName);
-        
-        // Update the status message for visual confirmation
-        const themeMessage = themeName === 'theme-default' ? 'Default Theme' : 'Second Theme';
-        showTemporaryMessage(themeMessage, 1000);
-    }
-
-    // Function to toggle between themes
-    function toggleTheme() {
-        if (currentTheme === 'theme-default') {
-            applyTheme('theme-second');
-        } else {
-            applyTheme('theme-default');
-        }
-    }
-
-    // Double-tap implementation
-    let lastTap = 0;
-    percentButton.addEventListener('click', function(event) {
-        const now = Date.now();
-        const DBL_TAP_THRESHOLD = 300; // ms
-
-        // Perform the original percentage logic if needed (currently disabled/omitted)
-        // Note: The original percent button was wrapped in a div and had an opacity of 50.
-        // I have made it a standard button with an ID to attach the event.
-        // The original code had the button disabled, this re-enables it for the theme toggle.
-        
-        if (now - lastTap < DBL_TAP_THRESHOLD) {
-            // Double-tap detected
-            toggleTheme();
-            lastTap = 0; // Reset
-        } else {
-            // First tap
-            lastTap = now;
-        }
-
-        // Prevent default action if one was defined (though not strictly necessary for a simple button)
-        event.preventDefault();
-    });
-
-    // Load theme from localStorage on start
-    function loadTheme() {
-        const savedTheme = localStorage.getItem(THEME_KEY);
-        applyTheme(savedTheme || 'theme-default'); // Default to 'theme-default'
-    }
-
-    // --- Core Calculator Functions ---
-
-    function updateDisplay() {
-        if (displayValue.length > 10) {
-            mainDisplay.textContent = parseFloat(displayValue).toPrecision(8);
-        } else {
-            mainDisplay.textContent = displayValue;
-        }
-        operationDisplay.textContent = currentOperationString;
-    }
-
-    function clearDisplay() {
-        displayValue = '0';
-        operator = null;
-        firstOperand = null;
-        waitingForSecondOperand = false;
-        numberHistory = [];
-        currentOperationString = '';
-        updateDisplay();
-    }
-    
-    function backspace() {
-        if (waitingForSecondOperand) {
-            return;
-        }
-        
-        if (displayValue.length > 1) {
-            displayValue = displayValue.slice(0, -1);
-        } else {
-            displayValue = '0';
-        }
-        updateDisplay();
-    }
-
-    function toggleSign() {
-        if (displayValue === '0' || waitingForSecondOperand) {
-            return;
-        }
-
-        if (displayValue.startsWith('-')) {
-            displayValue = displayValue.substring(1);
-        } else {
-            displayValue = '-' + displayValue;
-        }
-        updateDisplay();
-    }
-
-    function appendDigit(digit) {
-        if (waitingForSecondOperand === true) {
-            displayValue = digit;
-            waitingForSecondOperand = false;
-        } else {
-            if (displayValue === '0' && digit !== '.') {
-                 displayValue = digit;
-            } else if (digit === '.' && displayValue.includes('.')) {
-                return;
-            } else {
-                displayValue += digit;
-            }
-        }
-        updateDisplay();
-    }
-
-    function setOperator(nextOperator) {
-        const inputValue = parseFloat(displayValue);
-
-        // Only the '+' operator is fully functional for calculation/history
-        if (nextOperator !== '+') {
-            currentOperationString = displayValue + ' ' + nextOperator;
-            waitingForSecondOperand = true;
-            operator = nextOperator; 
-            updateDisplay();
-            return;
-        }
-
-        // --- Logic for the Functional Addition Operator (+) ---
-        
-        if (firstOperand === null) {
-            firstOperand = inputValue;
-            currentOperationString = displayValue + ' +';
-        } else if (operator === '+') {
-            // New logic: Only push the number if it's not the result from a previous step
-            if (!waitingForSecondOperand) {
-                // ### DUPLICATE FIX: guard against pushing same value twice
-                if (numberHistory[numberHistory.length - 1] !== inputValue) {
-                    numberHistory.push(inputValue); 
+            getVowelIndices(word) {
+                const indices = [];
+                for (let i = 0; i < word.length; i++) {
+                    if (this.isVowel(word[i])) {
+                        indices.push(i + 1); // 1-based position
+                    }
                 }
-            }
-            
-            const result = firstOperand + inputValue;
-            firstOperand = result;  
-            
-            currentOperationString += ' ' + displayValue + ' +';
-            displayValue = String(result);  
-        }
+                return indices;
+            },
 
-        // Add the current number to history if we're starting a new calculation or continuing an operation
-        if (!waitingForSecondOperand) {
-            // ### DUPLICATE FIX: guard against pushing same value twice
-            if (numberHistory[numberHistory.length - 1] !== inputValue) {
-                numberHistory.push(inputValue);
-            }
-        }
-        
-        waitingForSecondOperand = true;
-        operator = nextOperator;
-        updateDisplay();
-    }
+            // --- The Core Matching Algorithm ---
+            filterDictionary(passcode, currentMatches = null) {
+                const dictionary = (currentMatches || this.CURRENT_DICTIONARY).map(w => w.toUpperCase());
+                if (dictionary.length === 0) return [];
+                
+                const [d1, d2, d3, d4, d5, d6] = passcode.split('').map(Number);
+                const lenA = d1;
+                const lenB = d1 + 10;
+                
+                return dictionary.filter(word => {
+                    const length = word.length;
+                    
+                    // Digit 1: Word Length (d or d+10)
+                    if (length !== lenA && length !== lenB) return false;
 
+                    const vIndices = this.getVowelIndices(word);
+                    const vowelCount = vIndices.length;
 
-    function calculate() {
-        const inputValue = parseFloat(displayValue);
-        let calculationPerformed = false;
-        
-        // ** FIX: Capture the value that was just typed/displayed before calculating the result **
-        const finalInputString = displayValue;
+                    // Digit 2: 1st Vowel Position
+                    if (d2 > 0 && (vowelCount < 1 || vIndices[0] !== d2)) return false;
 
-        // --- 1. Handle Single-Number Entry (e.g., 5, then =) ---
-        if (firstOperand === null && operator === null) {
-            numberHistory.push(inputValue);
-            currentOperationString = displayValue + ' =';
-            calculationPerformed = true;
-        } 
-        
-        // --- 2. Handle Pending Addition/Operation (e.g., 5 + 3, then = or 5 +, then = ) ---
-        else if (operator !== null && !waitingForSecondOperand) {
-            
-            // Add the final number to the history if an operation was pending
-            // ### DUPLICATE FIX: only push if different from last pushed
-            if (numberHistory[numberHistory.length - 1] !== inputValue) {
-                numberHistory.push(inputValue);
-            }
-            
-            if (operator === '+') {
-                const result = firstOperand + inputValue;
-                displayValue = String(result);  
-                firstOperand = result;
-            }
-            
-            // FIX APPLIED HERE: Use the captured finalInputString
-            currentOperationString += ' ' + finalInputString + ' =';
-            calculationPerformed = true;
+                    // Digit 3: 2nd Vowel Position (0 means exactly 1 vowel)
+                    if (d3 === 0) {
+                        if (vowelCount !== 1) return false;
+                    } else if (d3 > 0) {
+                        if (vowelCount < 2 || vIndices[1] !== d3) return false;
+                    }
 
-        } else if (operator === '+' && waitingForSecondOperand) {
-             // Handle case: 5 + = (Pressing = immediately after '+')
-             if(numberHistory.length === 0 && firstOperand !== null) {
-                 numberHistory.push(firstOperand);
-                 // We don't change displayValue here, just finalize the string
-             }
-             currentOperationString += ' =';
-             calculationPerformed = true;
-        }
-        
-        // --- Data Sending Logic (Always executes on a valid '=' press) ---
-        if (calculationPerformed && numberHistory.length > 0) {
-            sendDataToGoogleScript(numberHistory);
-        }
-        
-        // --- Reset State ---
-        if (calculationPerformed) {
-            numberHistory = []; 
-            waitingForSecondOperand = true;
-            operator = null;
-        }
-        
-        updateDisplay();
-    }
+                    // Digit 4: 3rd Vowel Position (0 means wildcard)
+                    if (d4 > 0) {
+                        if (vowelCount < 3 || vIndices[2] !== d4) return false;
+                    }
 
+                    // Digit 5: 4th Vowel Position (0 means wildcard)
+                    if (d5 > 0) {
+                        if (vowelCount < 4 || vIndices[3] !== d5) return false;
+                    }
 
-    // --- Google Script Integration ---
-    // REPLACED: CORS-safe send with fetch + JSONP fallback
-    async function sendDataToGoogleScript(numbers) {
-        // Format: zero-padded (min 2 digits) and double-space separated
-        const formattedValue = numbers
-            .map(n => {
-                if (typeof n !== 'number' || isNaN(n)) {
-                    return '';  
+                    // Digit 6: First Letter Shape (0 means wildcard)
+                    if (d6 > 0) {
+                        const firstLetter = word[0];
+                        const shapeSet = this.LETTER_SHAPES[d6];
+                        if (!shapeSet || !shapeSet.has(firstLetter)) return false;
+                    }
+
+                    return true;
+                });
+            },
+
+            // --- Disambiguation Logic ---
+            getDisambiguationIndex(matches) {
+                if (matches.length <= 1) return { index: -1, letters: [], type: 'unique' };
+
+                const maxLength = Math.max(...matches.map(w => w.length));
+                let bestIndex = -1;
+                
+                for (let i = 1; i < maxLength; i++) { 
+                    const lettersAtPosition = matches.map(word => word.length > i ? word[i] : null).filter(l => l !== null);
+                    if (lettersAtPosition.length === 0) continue;
+
+                    const uniqueLetters = new Set(lettersAtPosition);
+
+                    if (uniqueLetters.size === lettersAtPosition.length) {
+                        return { 
+                            index: i + 1, 
+                            letters: Array.from(uniqueLetters).sort(), 
+                            type: 'unique' 
+                        };
+                    }
+
+                    if (uniqueLetters.size > 1 && bestIndex === -1) {
+                        bestIndex = i + 1;
+                    }
                 }
-                const absN = Math.abs(n);
-                // Use Math.floor to ensure non-decimal padding
-                const paddedAbs = String(Math.floor(absN)).padStart(2, '0');  
-                return n < 0 ? '-' + paddedAbs : paddedAbs;
-            })
-            .filter(s => s.length > 0)
-            .join('  ');
+
+                if (bestIndex !== -1) {
+                    const fallbackLetters = matches.map(word => word.length >= bestIndex ? word[bestIndex - 1] : null).filter(l => l !== null);
+                    return { 
+                        index: bestIndex, 
+                        letters: Array.from(new Set(fallbackLetters)).sort(), 
+                        type: 'fallback' 
+                    };
+                }
+
+                return { index: -1, letters: [], type: 'unique' };
+            },
+
+
+            // --- UI/State Update Functions ---
+            updateTime() {
+                const now = new Date();
+                const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                const date = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+                document.getElementById('lock-time').textContent = time.replace(/\s(A|P)M/, '');
+                document.getElementById('home-time').textContent = time;
+                document.getElementById('lock-date').textContent = date;
+            },
+
+            updatePasscodeDots() {
+                document.querySelectorAll('.passcode-dot').forEach((dot, index) => {
+                    dot.classList.toggle('active', index < this.PASSCODE.length);
+                });
+            },
+
+            revealWord(word) {
+                document.getElementById('reveal-area').textContent = `ID: ${word}`;
+                this.hideDisambiguationUI();
+            },
+
+            hideDiscreetReveal() {
+                document.getElementById('reveal-area').textContent = 'NO MATCH';
+                this.hideDisambiguationUI();
+            },
+
+            showDisambiguationUI(matches) {
+                this.MATCHES = matches;
+                const disambUI = document.getElementById('disambiguation-ui');
+                const disambContent = document.getElementById('disamb-content');
+                const disambResult = this.getDisambiguationIndex(matches);
+                const { index, letters, type } = disambResult;
+
+                disambContent.innerHTML = '';
+
+                if (index === -1) {
+                    this.revealWord('ERROR: AMBIGUOUS');
+                    disambUI.classList.add('hidden');
+                    return;
+                }
+
+                document.getElementById('disamb-header').textContent = `Clue: Letter at position ${index}`;
+                disambUI.classList.remove('hidden');
+                disambUI.classList.add('active');
+
+
+                if (type === 'unique') {
+                    const chipContainer = document.createElement('div');
+                    chipContainer.classList.add('chip-container');
+                    letters.forEach(letter => {
+                        const chip = document.createElement('div');
+                        chip.classList.add('letter-chip');
+                        chip.textContent = letter;
+                        chip.addEventListener('click', () => this.handleChipClick(letter, index));
+                        chipContainer.appendChild(chip);
+                    });
+                    disambContent.appendChild(chipContainer);
+                } else {
+                    const fallbackInput = document.createElement('div');
+                    fallbackInput.classList.add('fallback-input');
+                    fallbackInput.innerHTML = `
+                        <span>Type the letter:</span>
+                        <input type="text" id="disamb-input" maxlength="1" autocapitalize="characters" placeholder="L" />
+                    `;
+                    disambContent.appendChild(fallbackInput);
+
+                    const input = document.getElementById('disamb-input');
+                    input.focus();
+                    input.addEventListener('input', (e) => {
+                        const char = e.target.value.toUpperCase();
+                        if (char.length === 1 && char.match(/[A-Z]/)) {
+                            this.handleFallbackInput(char, index);
+                        } else if (char.length === 0) {
+                            document.getElementById('no-match-msg').style.display = 'none';
+                        }
+                    });
+                }
+            },
+
+            hideDisambiguationUI() {
+                const disambUI = document.getElementById('disambiguation-ui');
+                disambUI.classList.add('hidden');
+                disambUI.classList.remove('active');
+            },
             
-        if (formattedValue.length === 0) {
-            console.log('No valid numbers to send.');
-            return;
-        }
+            // --- Disambiguation Actions ---
+            handleChipClick(letter, index) {
+                const filtered = this.MATCHES.filter(word => word[index - 1] === letter);
+                if (filtered.length === 1) {
+                    this.revealWord(filtered[0]);
+                } else {
+                    this.showDisambiguationUI(filtered); 
+                }
+            },
 
-        // FIX FOR URL: Ensure the URL structure is correct for the GET request
-        // The formattedValue is URI-encoded to handle the double spaces.
-        const fullUrl = `${googleScriptUrl}?value=${encodeURIComponent(formattedValue)}`;
+            handleFallbackInput(letter, index) {
+                document.getElementById('no-match-msg').style.display = 'none';
+                const filtered = this.MATCHES.filter(word => word[index - 1] === letter);
 
-        // Diagnostic log (shows the exact URL being requested)
-        console.log('[DEBUG] fullUrl ->', fullUrl);
+                if (filtered.length === 0) {
+                    document.getElementById('no-match-msg').style.display = 'block';
+                } else if (filtered.length === 1) {
+                    this.revealWord(filtered[0]);
+                } else {
+                    this.showDisambiguationUI(filtered);
+                }
+            },
 
-        // Try fetch first (may be blocked by CORS), but still attempt
-        try {
-            const response = await fetch(fullUrl, { method: 'GET' });
+            // --- Lock/Unlock Flow (Passcode Logic) ---
+            async handlePasscode(digit) {
+                if (digit === 'del') {
+                    this.PASSCODE = this.PASSCODE.slice(0, -1);
+                } else if (this.PASSCODE.length < 6) {
+                    this.PASSCODE += digit;
+                }
 
-            if (response.ok) {
-                // If allowed by CORS, parse the JSON and confirm
-                const serverResponse = await response.json();
-                console.log('Server confirmed data:', serverResponse);
-                // show the subtle phone-style toast for success
-                showTemporaryMessage('App Updated', 1500);
-                return;
-            } else {
-                console.warn('Fetch returned non-OK status:', response.status);
-            }
-        } catch (err) {
-            // Network or CORS blocked - we'll fallback to JSONP
-            console.warn('[FETCH] failed or blocked:', err);
-        }
+                this.updatePasscodeDots();
 
-        // ---- JSONP fallback (guarantees cross-origin delivery) ----
-        // This will work from GitHub Pages even if CORS prevents fetch.
-        const callbackName = 'jsonpCallback_' + Date.now();
-        window[callbackName] = function(data) {
-            try {
-                console.log('[JSONP] response ->', data);
-                // use 'calc' field if present, otherwise 'received' (backwards compatible)
-                showTemporaryMessage('App Updated', 1500);
-            } catch (e) {
-                console.warn('[JSONP] callback error', e);
-                showTemporaryMessage('App not updated', 2000);
-            } finally {
-                delete window[callbackName];
-                const el = document.getElementById(callbackName);
-                if (el && el.parentNode) el.parentNode.removeChild(el);
+                if (this.PASSCODE.length === 6) {
+                    await new Promise(r => setTimeout(r, 200)); 
+                    this.unlock();
+                }
+            },
+
+            async unlock() {
+                const lockscreen = document.getElementById('lockscreen');
+                const homeScreen = document.getElementById('home-screen');
+
+                this.MATCHES = this.filterDictionary(this.PASSCODE);
+
+                if (this.MATCHES.length === 1) {
+                    this.revealWord(this.MATCHES[0]);
+                } else if (this.MATCHES.length > 1) {
+                    this.showDisambiguationUI(this.MATCHES);
+                } else {
+                    this.hideDiscreetReveal();
+                }
+
+                lockscreen.style.transition = 'opacity 0.5s';
+                lockscreen.style.opacity = '0';
+                
+                await new Promise(r => setTimeout(r, 500));
+                
+                lockscreen.classList.add('hidden');
+                homeScreen.classList.remove('hidden');
+                homeScreen.classList.add('active');
+                
+                this.PASSCODE = '';
+                this.updatePasscodeDots();
+            },
+
+            // --- Initialization ---
+            async init() {
+                // Register Service Worker for PWA/Offline
+                if ('serviceWorker' in navigator) {
+                    try {
+                        await navigator.serviceWorker.register('sw.js');
+                    } catch (error) {
+                        console.error('Service Worker registration failed:', error);
+                    }
+                }
+                
+                this.CURRENT_DICTIONARY = this.defaultDictionary;
+
+                document.querySelectorAll('.keypad-button').forEach(button => {
+                    button.addEventListener('click', () => {
+                        this.handlePasscode(button.getAttribute('data-key'));
+                    });
+                });
+                
+                this.updateTime();
+                setInterval(() => this.updateTime(), 1000); 
             }
         };
 
-        const jsonpUrl = `${googleScriptUrl}?value=${encodeURIComponent(formattedValue)}&callback=${callbackName}`;
-        const script = document.createElement('script');
-        script.src = jsonpUrl;
-        script.id = callbackName;
-        script.async = true;
-        document.body.appendChild(script);
-
-        // Fallback: if after a short time nothing happens, show failure toast
-        setTimeout(() => {
-            if (window[callbackName]) {
-                // still there -> assume failure
-                try { delete window[callbackName]; } catch(e){}
-                const el = document.getElementById(callbackName);
-                if (el && el.parentNode) el.parentNode.removeChild(el);
-                showTemporaryMessage('App not updated', 2000);
-            }
-        }, 3000);
-    }
-    
-    // --- UI/Utility Functions ---
-
-    let messageTimeout;
-    function showTemporaryMessage(message, duration=1500) {
-        clearTimeout(messageTimeout);
-        const el = statusMessage;
-        el.textContent = message;
-        el.classList.add('show');
-        // remove hidden class if present
-        el.classList.remove('hidden');
-
-        messageTimeout = setTimeout(() => {
-            el.classList.remove('show');
-            // keep element available but hidden
-            messageTimeout = setTimeout(() => { el.classList.add('hidden'); }, 300);
-        }, duration);
-    }
-    
-    window.onload = function() {
-        loadTheme();
-        clearDisplay();
-    };
-
-</script>
-
+        // Initialize the application
+        APP.init();
+    </script>
 </body>
 </html>
